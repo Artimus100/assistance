@@ -17,21 +17,42 @@ const getEditor = async (req: Request, res: Response): Promise<void> => {
         res.status(500).json({ error: 'Internal Server Error' });
     }
 };
-const registerEditor = async (username: string, password: string, firstname: string, lastname: string): Promise<void> =>{
+const registerEditor = async (req: Request, res: Response): Promise<void> =>{
     try {
-        await prisma.editor.create({
+        const {username,password, firstname, lastname} = req.body;
+        const hashedPassword = await bcrypt.hash(password, 10);
+        const editor = await prisma.editor.create({
             data: {
-                username: username,
-                password: password,
-                firstname: firstname,
-                lastname: lastname,
+                username,
+                password: hashedPassword,
+                firstname,
+                lastname,
             },
         });
+        res.status(500).json(editor);
     } catch (error) {
         console.error('Error registering editor:', error);
         throw new Error('Failed to register editor');
     }
 }
+// onst registerHost = async (req: Request, res: Response): Promise<void> => {
+//     try {
+//         const { username, firstname, lastname, password } = req.body;
+//         const hashedPassword = await bcrypt.hash(password, 10); // Hash the password
+//         const host = await prisma.host.create({
+//             data: {
+//                 username,
+//                 firstname,
+//                 lastname,
+//                 password: hashedPassword,
+//             },
+//         });
+//         res.status(201).json(host);
+//     } catch (err) {
+//         console.error('Error registering host', err);
+//         res.status(500).json({ error: 'Internal Server Error' });
+//     }
+// };
 const loginEditor = async (req: Request, res: Response): Promise<void> => {
     try {
         const { username, password } = req.body; // Assuming you have these fields in your request body
