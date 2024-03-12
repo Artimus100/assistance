@@ -33,22 +33,33 @@ const getAllHosts = async (req: Request, res: Response): Promise<void> => {
 };
 const registerHost = async (req: Request, res: Response): Promise<void> => {
     try {
-        const { username, firstname, lastname, password } = req.body;
-        const hashedPassword = await bcrypt.hash(password, 10); // Hash the password
-        const host = await prisma.host.create({
-            data: {
-                username,
-                firstname,
-                lastname,
-                password: hashedPassword,
-            },
-        });
-        res.status(201).json(host);
-    } catch (err) {
-        console.error('Error registering host', err);
-        res.status(500).json({ error: 'Internal Server Error' });
+      const { username, firstname, lastname, password } = req.body;
+  
+      // Check if the username already exists
+      const existingHost = await prisma.host.findUnique({ where: { username } });
+      if (existingHost) {
+        // Username already exists, handle the error or notify the user
+        res.status(400).json({ error: 'Username already exists' });
+        return;
+      }
+  
+      // Proceed with host creation since the username is unique
+      const hashedPassword = await bcrypt.hash(password, 10);
+      const host = await prisma.host.create({
+        data: {
+          username,
+          firstname,
+          lastname,
+          password: hashedPassword,
+        },
+      });
+  
+      res.status(201).json(host);
+    } catch (error) {
+      console.error('Error registering host:', error);
+      res.status(500).json({ error: 'Internal Server Error' });
     }
-};
+  };
 
 // Log in a host
 const loginHost = async (req: Request, res: Response): Promise<void> => {
@@ -95,29 +106,20 @@ const loginHost = async (req: Request, res: Response): Promise<void> => {
 //     console.log(clientSecret);
 //     return { clientId, clientSecret };
 // };
-const createKey = async (hostId:number): Promise<{ clientId: string; clientSecret: string, hostId:number }> => {
+const createKey = async (hostId: number): Promise<{ clientId: string; clientSecret: string }> => {
     try {
-        const oauth2Client = new google.auth.OAuth2();
-
-        // Generate a unique client ID and client secret
-        const clientId = oauth2Client.generateAuthUrl({
-            access_type: 'offline',
-            scope: [
-                'https://www.googleapis.com/auth/youtube',
-                'https://www.googleapis.com/auth/youtube.upload'
-            ]
-        });
+        // Generate a unique client secret
         const clientSecret = generateRandomString(10);
 
         // Save the generated keys to the database
-        const savedKeys = await prisma.oAuth2Credential.create({
+        const savedKeys = await prisma.oauth2credential.create({
             data: {
-                clientId,
+                clientId: '975807587258-1b81eb7ktm6fri0e99rlmm5png3k6i61.apps.googleusercontent.com', // Replace with your actual client ID
                 clientSecret,
-                hostId,
+                hostId
             },
-            
         });
+
         console.log(savedKeys);
 
         return savedKeys;

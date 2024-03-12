@@ -59,6 +59,6 @@ app.post('/createKeys', (req, res) => __awaiter(void 0, void 0, void 0, function
 // Route for logging in a host
 app.post('/login', host_3.loginHost);
 // // Start the server
-app.listen(3001, () => {
-    console.log(`Server is running on port 3001`);
+app.listen(3000, () => {
+    console.log(`Server is running on port 3000`);
 });

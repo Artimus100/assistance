@@ -29,16 +29,19 @@ const getEditor = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     }
 });
 exports.getEditor = getEditor;
-const registerEditor = (username, password, firstname, lastname) => __awaiter(void 0, void 0, void 0, function* () {
+const registerEditor = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
-        yield prisma.editor.create({
+        const { username, password, firstname, lastname } = req.body;
+        const hashedPassword = yield bcrypt_1.default.hash(password, 10);
+        const editor = yield prisma.editor.create({
             data: {
-                username: username,
-                password: password,
-                firstname: firstname,
-                lastname: lastname,
+                username,
+                password: hashedPassword,
+                firstname,
+                lastname,
             },
         });
+        res.status(500).json(editor);
     }
     catch (error) {
         console.error('Error registering editor:', error);
@@ -46,6 +49,24 @@ const registerEditor = (username, password, firstname, lastname) => __awaiter(vo
     }
 });
 exports.registerEditor = registerEditor;
+// onst registerHost = async (req: Request, res: Response): Promise<void> => {
+//     try {
+//         const { username, firstname, lastname, password } = req.body;
+//         const hashedPassword = await bcrypt.hash(password, 10); // Hash the password
+//         const host = await prisma.host.create({
+//             data: {
+//                 username,
+//                 firstname,
+//                 lastname,
+//                 password: hashedPassword,
+//             },
+//         });
+//         res.status(201).json(host);
+//     } catch (err) {
+//         console.error('Error registering host', err);
+//         res.status(500).json({ error: 'Internal Server Error' });
+//     }
+// };
 const loginEditor = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const { username, password } = req.body; // Assuming you have these fields in your request body

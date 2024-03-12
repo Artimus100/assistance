@@ -17,7 +17,6 @@ const client_1 = require("@prisma/client");
 // import session from 'express-session';
 const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
 const bcrypt_1 = __importDefault(require("bcrypt"));
-const googleapis_1 = require("googleapis");
 const prisma = new client_1.PrismaClient();
 const generateRandomString = (length) => {
     const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
@@ -46,7 +45,15 @@ exports.getAllHosts = getAllHosts;
 const registerHost = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const { username, firstname, lastname, password } = req.body;
-        const hashedPassword = yield bcrypt_1.default.hash(password, 10); // Hash the password
+        // Check if the username already exists
+        const existingHost = yield prisma.host.findUnique({ where: { username } });
+        if (existingHost) {
+            // Username already exists, handle the error or notify the user
+            res.status(400).json({ error: 'Username already exists' });
+            return;
+        }
+        // Proceed with host creation since the username is unique
+        const hashedPassword = yield bcrypt_1.default.hash(password, 10);
         const host = yield prisma.host.create({
             data: {
                 username,
@@ -57,8 +64,8 @@ const registerHost = (req, res) => __awaiter(void 0, void 0, void 0, function* (
         });
         res.status(201).json(host);
     }
-    catch (err) {
-        console.error('Error registering host', err);
+    catch (error) {
+        console.error('Error registering host:', error);
         res.status(500).json({ error: 'Internal Server Error' });
     }
 });
@@ -107,22 +114,14 @@ exports.loginHost = loginHost;
 // };
 const createKey = (hostId) => __awaiter(void 0, void 0, void 0, function* () {
     try {
-        const oauth2Client = new googleapis_1.google.auth.OAuth2();
-        // Generate a unique client ID and client secret
-        const clientId = oauth2Client.generateAuthUrl({
-            access_type: 'offline',
-            scope: [
-                'https://www.googleapis.com/auth/youtube',
-                'https://www.googleapis.com/auth/youtube.upload'
-            ]
-        });
+        // Generate a unique client secret
         const clientSecret = generateRandomString(10);
         // Save the generated keys to the database
-        const savedKeys = yield prisma.oAuth2Credential.create({
+        const savedKeys = yield prisma.oauth2credential.create({
             data: {
-                clientId,
+                clientId: '975807587258-1b81eb7ktm6fri0e99rlmm5png3k6i61.apps.googleusercontent.com', // Replace with your actual client ID
                 clientSecret,
-                hostId,
+                hostId
             },
         });
         console.log(savedKeys);
