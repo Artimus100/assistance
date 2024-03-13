@@ -16,7 +16,8 @@ const cors = require("cors");
 // import editorRouter from './routes/editor';
 const editor_1 = require("./routes/editor");
 const editor_2 = require("./routes/editor");
-const editor_3 = require("./routes/editor"); // Import your route handler function
+const editor_3 = require("./routes/editor");
+const editor_4 = require("./routes/editor"); // Import your route handler function
 //imports from the host route
 const host_1 = require("./routes/host");
 const host_2 = require("./routes/host");
@@ -55,6 +56,7 @@ app.post('/createKeys', (req, res) => __awaiter(void 0, void 0, void 0, function
         res.status(500).json({ error: 'Internal Server Error' });
     }
 }));
+app.post("/uploadVideo", editor_4.uploadVideo);
 //  app.post('/getKeys', oAuth2Credentials)
 // Route for logging in a host
 app.post('/login', host_3.loginHost);

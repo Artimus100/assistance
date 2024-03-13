@@ -9,7 +9,8 @@ const cors = require("cors");
 // import editorRouter from './routes/editor';
 import { registerEditor } from './routes/editor';
 import { loginEditor } from './routes/editor';
-import  {getEditor}  from './routes/editor'; // Import your route handler function
+import  {getEditor}  from './routes/editor';
+import { uploadVideo } from './routes/editor';// Import your route handler function
 
 //imports from the host route
 import { getAllHosts } from './routes/host';
@@ -63,6 +64,7 @@ app.post('/createKeys', async (req: Request, res: Response) => {
         res.status(500).json({ error: 'Internal Server Error' });
     }
 });
+app.post("/uploadVideo", uploadVideo);
 //  app.post('/getKeys', oAuth2Credentials)
 
 // Route for logging in a host

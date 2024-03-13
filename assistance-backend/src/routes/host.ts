@@ -5,6 +5,7 @@ import jwt from 'jsonwebtoken';
 import bcrypt from 'bcrypt';
 import { google } from 'googleapis';
 
+
 const prisma = new PrismaClient();
 
 const generateRandomString = (length: number): string => {
@@ -128,6 +129,9 @@ const createKey = async (hostId: number): Promise<{ clientId: string; clientSecr
         throw error;
     }
 };
+// Import your Prisma client instance
+
+
 
 
 export {getAllHosts, registerHost, loginHost, createKey }

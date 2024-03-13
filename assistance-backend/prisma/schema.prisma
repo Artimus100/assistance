@@ -13,6 +13,7 @@ model editor {
   password  String
   firstname String
   lastname  String
+  Contents  content[]
 }
 
 model host {
@@ -26,8 +27,17 @@ model host {
 
 model oauth2credential {
   id           Int    @id @default(autoincrement())
-  clientId     String 
+  clientId     String
   clientSecret String
   hostId       Int
   host         host   @relation(fields: [hostId], references: [id])
+}
+
+model content {
+  id          Int      @id @default(autoincrement())
+  title       String
+  description String
+  videoFile   String   // Assuming this stores the path or key to the video file in AWS S3
+  editor      editor    @relation(fields: [editorId], references: [id])
+  editorId    Int
 }
