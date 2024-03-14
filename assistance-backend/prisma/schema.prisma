@@ -8,20 +8,20 @@ datasource db {
 }
 
 model editor {
-  id        Int    @id @default(autoincrement())
-  username  String @unique
+  id        Int       @id @default(autoincrement())
+  username  String    @unique
   password  String
   firstname String
   lastname  String
-  Contents  content[]
+  contents  Content[]
 }
 
 model host {
   id                Int                @id @default(autoincrement())
   username          String             @unique
   password          String
-  firstname         String
-  lastname          String
+  firstname         String?
+  lastname          String?
   oAuth2Credentials oauth2credential[]
 }
 
@@ -33,11 +33,20 @@ model oauth2credential {
   host         host   @relation(fields: [hostId], references: [id])
 }
 
-model content {
-  id          Int      @id @default(autoincrement())
+model Content {
+  id          Int         @id @default(autoincrement())
+  videoId     Int        @unique @default(autoincrement()) // Added auto-incremented video ID
   title       String
   description String
-  videoFile   String   // Assuming this stores the path or key to the video file in AWS S3
-  editor      editor    @relation(fields: [editorId], references: [id])
+  videoFile   String
+  status      VideoStatus
   editorId    Int
+  uploadDate  DateTime    @default(now())
+  editor      editor      @relation(fields: [editorId], references: [id])
+}
+
+enum VideoStatus {
+  PENDING
+  APPROVED
+  REJECTED
 }

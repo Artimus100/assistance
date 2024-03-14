@@ -10,6 +10,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const express = require("express");
+const client_1 = require("@prisma/client");
 const cors = require("cors");
 // import session from 'express-session';
 // import {hostRouter} from './routes/host';
@@ -25,6 +26,7 @@ const host_3 = require("./routes/host");
 const host_4 = require("./routes/host");
 //  import { oAuth2Credentials } from './routes/host'
 const app = express();
+const prisma = new client_1.PrismaClient();
 app.use(cors());
 app.use(express.json());
 // app.use(session({ secret: 'your_secret_key', resave: false, saveUninitialized: true }));
@@ -60,6 +62,51 @@ app.post("/uploadVideo", editor_4.uploadVideo);
 //  app.post('/getKeys', oAuth2Credentials)
 // Route for logging in a host
 app.post('/login', host_3.loginHost);
+// Route to fetch uploaded videos awaiting approval
+app.get('/awaiting-approval', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        const awaitingApprovalVideos = yield prisma.content.findMany({
+            where: { status: 'PENDING' }, // Fetch videos with pending status
+        });
+        res.status(200).json({ videos: awaitingApprovalVideos });
+    }
+    catch (error) {
+        console.error('Error fetching videos awaiting approval:', error);
+        res.status(500).json({ error: 'Failed to fetch videos' });
+    }
+}));
+// Route to approve a video for publishing
+app.post('/approve/:videoId', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const { videoId } = req.params;
+    try {
+        // Update the status of the video to approved
+        const approvedVideo = yield prisma.content.update({
+            where: { id: parseInt(videoId) },
+            data: { status: 'APPROVED' },
+        });
+        res.status(200).json({ message: 'Video approved successfully', video: approvedVideo });
+    }
+    catch (error) {
+        console.error('Error approving video:', error);
+        res.status(500).json({ error: 'Failed to approve video' });
+    }
+}));
+// Route to reject a video
+app.post('/reject/:videoId', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const { videoId } = req.params;
+    try {
+        // Update the status of the video to rejected
+        const rejectedVideo = yield prisma.content.update({
+            where: { id: parseInt(videoId) },
+            data: { status: 'REJECTED' },
+        });
+        res.status(200).json({ message: 'Video rejected successfully', video: rejectedVideo });
+    }
+    catch (error) {
+        console.error('Error rejecting video:', error);
+        res.status(500).json({ error: 'Failed to reject video' });
+    }
+}));
 // // Start the server
 app.listen(3000, () => {
     console.log(`Server is running on port 3000`);

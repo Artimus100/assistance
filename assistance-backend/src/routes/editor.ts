@@ -114,7 +114,8 @@ const uploadVideo = async (req: Request, res: Response): Promise<void> => {
           data: {
             title,
             description,
-            videoFile: key, // Store the S3 key in the database
+            videoFile: key,
+            status: 'PENDING', // Store the S3 key in the database
             editorId: parseInt(editorId),
           },
         });

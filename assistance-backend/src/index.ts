@@ -1,5 +1,7 @@
 const express = require("express");
 import { Request, Response } from 'express';
+import { PrismaClient } from '@prisma/client';
+
 
 const cors = require("cors");
 // import session from 'express-session';
@@ -23,6 +25,8 @@ import { createKey } from './routes/host';
 
 
 const app = express();
+const prisma = new PrismaClient();
+
 
  
 
@@ -69,6 +73,56 @@ app.post("/uploadVideo", uploadVideo);
 
 // Route for logging in a host
 app.post('/login', loginHost);
+
+// Route to fetch uploaded videos awaiting approval
+app.get('/awaiting-approval', async (req: Request, res: Response) => {
+    try {
+      const awaitingApprovalVideos = await prisma.content.findMany({
+        where: { status: 'PENDING' }, // Fetch videos with pending status
+      });
+  
+      res.status(200).json({ videos: awaitingApprovalVideos });
+    } catch (error) {
+      console.error('Error fetching videos awaiting approval:', error);
+      res.status(500).json({ error: 'Failed to fetch videos' });
+    }
+  });
+  
+  // Route to approve a video for publishing
+  app.post('/approve/:videoId', async (req: Request, res: Response) => {
+    const { videoId } = req.params;
+  
+    try {
+      // Update the status of the video to approved
+      const approvedVideo = await prisma.content.update({
+        where: { id: parseInt(videoId) },
+        data: { status: 'APPROVED' },
+      });
+  
+      res.status(200).json({ message: 'Video approved successfully', video: approvedVideo });
+    } catch (error) {
+      console.error('Error approving video:', error);
+      res.status(500).json({ error: 'Failed to approve video' });
+    }
+  });
+  
+  // Route to reject a video
+  app.post('/reject/:videoId', async (req: Request, res: Response) => {
+    const { videoId } = req.params;
+  
+    try {
+      // Update the status of the video to rejected
+      const rejectedVideo = await prisma.content.update({
+        where: { id: parseInt(videoId) },
+        data: { status: 'REJECTED' },
+      });
+  
+      res.status(200).json({ message: 'Video rejected successfully', video: rejectedVideo });
+    } catch (error) {
+      console.error('Error rejecting video:', error);
+      res.status(500).json({ error: 'Failed to reject video' });
+    }
+  });
 
 
 

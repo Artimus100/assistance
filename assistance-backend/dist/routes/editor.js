@@ -52,24 +52,6 @@ const registerEditor = (req, res) => __awaiter(void 0, void 0, void 0, function*
     }
 });
 exports.registerEditor = registerEditor;
-// onst registerHost = async (req: Request, res: Response): Promise<void> => {
-//     try {
-//         const { username, firstname, lastname, password } = req.body;
-//         const hashedPassword = await bcrypt.hash(password, 10); // Hash the password
-//         const host = await prisma.host.create({
-//             data: {
-//                 username,
-//                 firstname,
-//                 lastname,
-//                 password: hashedPassword,
-//             },
-//         });
-//         res.status(201).json(host);
-//     } catch (err) {
-//         console.error('Error registering host', err);
-//         res.status(500).json({ error: 'Internal Server Error' });
-//     }
-// };
 const loginEditor = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const { username, password } = req.body; // Assuming you have these fields in your request body
@@ -102,13 +84,13 @@ const uploadVideo = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
     try {
         const s3 = new aws_sdk_1.default.S3({
             accessKeyId: process.env.AWS_ACCESS_KEY_ID,
-            secretAccessKey: "ZFlCKO55muw8SADluVPECzXqwuuIYD39xoO4zoRv",
+            secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
         });
         // Create a multer instance for handling file uploads
         const upload = (0, multer_1.default)({
             storage: multer_1.default.memoryStorage(), // Store files in memory before uploading to S3
             limits: {
-                fileSize: 1024 * 1024 * 1024, // Maximum file size (1GB)
+                fileSize: 2 * 1024 * 1024 * 1024, // Maximum file size (2GB)
             },
         }).single('video'); // Specify the field name for the uploaded file
         // Handle file upload using multer
@@ -136,7 +118,8 @@ const uploadVideo = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
                 data: {
                     title,
                     description,
-                    videoFile: key, // Store the S3 key in the database
+                    videoFile: key,
+                    status: 'PENDING', // Store the S3 key in the database
                     editorId: parseInt(editorId),
                 },
             });
