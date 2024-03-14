@@ -10,7 +10,7 @@ const RegistrationForm: React.FC = () => {
   const handleRegistration = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      const response = await fetch(role === 'host' ? 'http://localhost:3001/register' : 'http://localhost:3001/registerEditor', {
+      const response = await fetch(role === 'host' ? 'http://localhost:3000/register' : 'http://localhost:3000/registerEditor', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
