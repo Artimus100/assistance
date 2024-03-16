@@ -63,25 +63,20 @@ app.post("/uploadVideo", editor_4.uploadVideo);
 // Route for logging in a host
 app.post('/login', host_3.loginHost);
 // Route to fetch uploaded videos awaiting approval
-app.get('/awaiting-approval', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    try {
-        const awaitingApprovalVideos = yield prisma.content.findMany({
-            where: { status: 'PENDING' }, // Fetch videos with pending status
-        });
-        res.status(200).json({ videos: awaitingApprovalVideos });
-    }
-    catch (error) {
-        console.error('Error fetching videos awaiting approval:', error);
-        res.status(500).json({ error: 'Failed to fetch videos' });
-    }
-}));
 // Route to approve a video for publishing
-app.post('/approve/:videoId', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    const { videoId } = req.params;
+app.post('/approve/:id', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const { id } = req.params;
     try {
+        // Check if the video record exists
+        const existingVideo = yield prisma.content.findUnique({
+            where: { id: parseInt(id) },
+        });
+        if (!existingVideo) {
+            return res.status(404).json({ error: 'Video not found' });
+        }
         // Update the status of the video to approved
         const approvedVideo = yield prisma.content.update({
-            where: { id: parseInt(videoId) },
+            where: { id: parseInt(id) },
             data: { status: 'APPROVED' },
         });
         res.status(200).json({ message: 'Video approved successfully', video: approvedVideo });
@@ -92,12 +87,19 @@ app.post('/approve/:videoId', (req, res) => __awaiter(void 0, void 0, void 0, fu
     }
 }));
 // Route to reject a video
-app.post('/reject/:videoId', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    const { videoId } = req.params;
+app.post('/reject/:id', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const { id } = req.params;
     try {
+        // Check if the video record exists
+        const existingVideo = yield prisma.content.findUnique({
+            where: { id: parseInt(id) },
+        });
+        if (!existingVideo) {
+            return res.status(404).json({ error: 'Video not found' });
+        }
         // Update the status of the video to rejected
         const rejectedVideo = yield prisma.content.update({
-            where: { id: parseInt(videoId) },
+            where: { id: parseInt(id) },
             data: { status: 'REJECTED' },
         });
         res.status(200).json({ message: 'Video rejected successfully', video: rejectedVideo });

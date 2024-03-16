@@ -35,6 +35,15 @@ exports.getEditor = getEditor;
 const registerEditor = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const { username, password, firstname, lastname } = req.body;
+        const existingEditor = yield prisma.editor.findUnique({
+            where: {
+                username
+            }
+        });
+        if (existingEditor) {
+            res.status(400).json({ error: 'Username already exists' });
+            return;
+        }
         const hashedPassword = yield bcrypt_1.default.hash(password, 10);
         const editor = yield prisma.editor.create({
             data: {

@@ -35,7 +35,6 @@ model oauth2credential {
 
 model Content {
   id          Int         @id @default(autoincrement())
-  videoId     Int        @unique @default(autoincrement()) // Added auto-incremented video ID
   title       String
   description String
   videoFile   String

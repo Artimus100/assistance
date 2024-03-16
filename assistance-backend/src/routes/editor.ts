@@ -23,6 +23,15 @@ const getEditor = async (req: Request, res: Response): Promise<void> => {
 const registerEditor = async (req: Request, res: Response): Promise<void> =>{
     try {
         const {username,password, firstname, lastname} = req.body;
+        const existingEditor = await prisma.editor.findUnique({
+            where:{
+                username
+            }
+        });
+        if(existingEditor){
+            res.status(400).json({ error: 'Username already exists' });
+            return;
+        }
         const hashedPassword = await bcrypt.hash(password, 10);
         const editor = await prisma.editor.create({
             data: {

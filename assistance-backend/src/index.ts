@@ -75,27 +75,23 @@ app.post("/uploadVideo", uploadVideo);
 app.post('/login', loginHost);
 
 // Route to fetch uploaded videos awaiting approval
-app.get('/awaiting-approval', async (req: Request, res: Response) => {
+// Route to approve a video for publishing
+app.post('/approve/:id', async (req: Request, res: Response) => {
+    const { id } = req.params;
+  
     try {
-      const awaitingApprovalVideos = await prisma.content.findMany({
-        where: { status: 'PENDING' }, // Fetch videos with pending status
+      // Check if the video record exists
+      const existingVideo = await prisma.content.findUnique({
+        where: { id: parseInt(id) },
       });
   
-      res.status(200).json({ videos: awaitingApprovalVideos });
-    } catch (error) {
-      console.error('Error fetching videos awaiting approval:', error);
-      res.status(500).json({ error: 'Failed to fetch videos' });
-    }
-  });
+      if (!existingVideo) {
+        return res.status(404).json({ error: 'Video not found' });
+      }
   
-  // Route to approve a video for publishing
-  app.post('/approve/:videoId', async (req: Request, res: Response) => {
-    const { videoId } = req.params;
-  
-    try {
       // Update the status of the video to approved
       const approvedVideo = await prisma.content.update({
-        where: { id: parseInt(videoId) },
+        where: { id: parseInt(id) },
         data: { status: 'APPROVED' },
       });
   
@@ -107,13 +103,22 @@ app.get('/awaiting-approval', async (req: Request, res: Response) => {
   });
   
   // Route to reject a video
-  app.post('/reject/:videoId', async (req: Request, res: Response) => {
-    const { videoId } = req.params;
+  app.post('/reject/:id', async (req: Request, res: Response) => {
+    const { id } = req.params;
   
     try {
+      // Check if the video record exists
+      const existingVideo = await prisma.content.findUnique({
+        where: { id: parseInt(id) },
+      });
+  
+      if (!existingVideo) {
+        return res.status(404).json({ error: 'Video not found' });
+      }
+  
       // Update the status of the video to rejected
       const rejectedVideo = await prisma.content.update({
-        where: { id: parseInt(videoId) },
+        where: { id: parseInt(id) },
         data: { status: 'REJECTED' },
       });
   
@@ -123,7 +128,7 @@ app.get('/awaiting-approval', async (req: Request, res: Response) => {
       res.status(500).json({ error: 'Failed to reject video' });
     }
   });
-
+  
 
 
 
