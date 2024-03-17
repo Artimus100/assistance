@@ -1,6 +1,12 @@
 const express = require("express");
 import { Request, Response } from 'express';
 import { PrismaClient } from '@prisma/client';
+import multer from 'multer';
+import aws from 'aws-sdk';
+import multerS3 from 'multer-s3';
+import { S3Client } from '@aws-sdk/client-s3';
+
+
 
 
 const cors = require("cors");
@@ -20,6 +26,11 @@ import { registerHost } from './routes/host';
 import { loginHost } from './routes/host';
 import { createKey } from './routes/host';
 //  import { oAuth2Credentials } from './routes/host'
+//uploadVideoToYouTube, initiateOAuth2Authorization, handleOAuth2Callback
+import { uploadVideoToYouTube } from './routes/host';
+import {initiateOAuth2Authorization} from './routes/host';
+import { handleOAuth2Callback } from './routes/host';
+
 
 
 
@@ -128,10 +139,55 @@ app.post('/approve/:id', async (req: Request, res: Response) => {
       res.status(500).json({ error: 'Failed to reject video' });
     }
   });
+  app.get('/authorize', initiateOAuth2Authorization);
+  app.get('/oauth2callback', handleOAuth2Callback);
+  const s3 = new aws.S3({
+    // Configure your AWS credentials and region
+    accessKeyId: process.env.AWS_ACCESS_KEY_ID,
+    secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
+    region: process.env.AWS_REGION,
+  });
+  const s3Client = new S3Client({
+    credentials: {
+      accessKeyId: process.env.AWS_ACCESS_KEY_ID!,
+      secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY!,
+    },
+    region: process.env.AWS_REGION!,
+  });
+  const upload = multer({
+    storage: multerS3({
+      s3: s3Client, // Use S3Client instance here
+      bucket: process.env.AWS_S3_BUCKET_NAME!,
+      contentType: multerS3.AUTO_CONTENT_TYPE,
+      acl: 'public-read',
+      key: function(req, file, cb) {
+        cb(null, Date.now().toString() + '-' + file.originalname);
+      },
+    }),
+  });;
+  interface CustomFile extends Express.Multer.File {
+    key: string;
+  }
+   
+  app.post('/upload', upload.single('videoFile'), async (req:Request, res:Response) => {
+    // Check if req.file exists and has the key property
+    if (!req.file || !(req.file as CustomFile).key) {
+      res.status(400).json({ error: 'Video file is missing or invalid' });
+      return;
+    }
   
-
-
-
+    // Assuming you're handling metadata in req.body
+    const metadata = req.body;
+    
+    try {
+      const videoKey = (req.file as CustomFile).key;
+      const uploadedVideo = await uploadVideoToYouTube(videoKey, metadata);
+      res.status(200).json({ message: 'Video uploaded successfully', video: uploadedVideo });
+    } catch (error) {
+      console.error('Error uploading video to YouTube:', error);
+      res.status(500).json({ error: 'Failed to upload video to YouTube' });
+    }
+  });
 // // Start the server
 app.listen(3000, () => {
     console.log(`Server is running on port 3000`);

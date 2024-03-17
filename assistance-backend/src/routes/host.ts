@@ -4,10 +4,44 @@ import { PrismaClient } from '@prisma/client';
 import jwt from 'jsonwebtoken';
 import bcrypt from 'bcrypt';
 import { google } from 'googleapis';
+import { S3 } from 'aws-sdk';
+
+
 
 
 const prisma = new PrismaClient();
+const OAuth2Client = google.auth.OAuth2;
 
+
+const oauth2Client = new OAuth2Client({
+    clientId: '975807587258-1b81eb7ktm6fri0e99rlmm5png3k6i61.apps.googleusercontent.com',
+    clientSecret: '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',
+    redirectUri: 'http://localhost:3000/oauth2callback',
+  });
+  const initiateOAuth2Authorization=function (req: Request, res: Response): void {
+    const authUrl = oauth2Client.generateAuthUrl({
+      access_type: 'offline',
+      scope: ['https://www.googleapis.com/auth/youtube.upload'],
+    });
+    res.redirect(authUrl);
+  }
+
+ const handleOAuth2Callback= async function (req: Request, res: Response): Promise<void> {
+    const code: string | undefined = req.query.code as string | undefined;
+    if (!code) {
+      res.status(400).send('Missing authorization code');
+      return;
+    }
+  
+    try {
+      const { tokens } = await oauth2Client.getToken(code);
+      // Do something with the tokens
+      res.redirect('/success');
+    } catch (error: any) {
+      console.error('Error retrieving tokens:', error);
+      res.status(500).send('Failed to retrieve tokens');
+    }
+  }
 const generateRandomString = (length: number): string => {
     const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
     let result = '';
@@ -129,9 +163,39 @@ const createKey = async (hostId: number): Promise<{ clientId: string; clientSecr
         throw error;
     }
 };
-// Import your Prisma client instance
+async function uploadVideoToYouTube(videoKey: string, metadata: any): Promise<any> {
+    // Initialize S3 client
+    const s3 = new S3();
+  
+    // Get the video file from AWS S3
+    const params = {
+        Bucket: process.env.AWS_S3_BUCKET_NAME!,
+        Key: videoKey, // The key (path) of the video file in the S3 bucket
+    };
+  
+    const { Body } = await s3.getObject(params).promise();
+  
+    // Upload the video to YouTube
+    const youtube = google.youtube({ version: 'v3', auth: oauth2Client });
+    const res = await youtube.videos.insert({
+      requestBody: {
+        snippet: {
+          title: metadata.title,
+          description: metadata.description,
+          tags: metadata.tags,
+        },
+        status: {
+          privacyStatus: 'public', // Change as needed
+        },
+      },
+      media: {
+        body: Body,
+      },
+      part: ['snippet', 'status'], // Pass parts as an array of strings
+    });
+  
+    return res.data;
+  }
 
 
-
-
-export {getAllHosts, registerHost, loginHost, createKey }
+export {getAllHosts, registerHost, loginHost, createKey, uploadVideoToYouTube, initiateOAuth2Authorization, handleOAuth2Callback}
