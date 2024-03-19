@@ -196,6 +196,49 @@ async function uploadVideoToYouTube(videoKey: string, metadata: any): Promise<an
   
     return res.data;
   }
+  const workspace = async (req:Request, res:Response): Promise<any>=>{
+    try {
+      
+      const { hostId, editorId } = req.body;
+      const parsedHostId = parseInt(hostId, 10);
+        const parsedEditorId = parseInt(editorId, 10)
+
+      // Check if host exists
+      const host = await prisma.host.findUnique({
+        where: {
+            id: parsedHostId,
+        },
+    });
+      if (!host) {
+        return res.status(404).json({ error: 'Host not found' });
+      }
+      const EditorId = parseInt(req.body.editorId, 10);
+
+      // Check if editor exists
+      const editor = await prisma.editor.findUnique({
+        where: {
+            id: parsedEditorId,
+        },
+    });
+      if (!editor) {
+        return res.status(404).json({ error: 'Editor not found' });
+      }
+      res.locals.editorId = editorId;//stores the editor id in locals
+      // Create workspace
+      const workspace = await prisma.workspace.create({
+        data: {
+          host: { connect: { id: hostId } },
+          editor: { connect: { id: editorId } }
+        }
+      });
+  
+      res.json(workspace);
+    } catch (error) {
+      console.error('Error creating workspace:', error);
+      res.status(500).json({ error: 'Failed to create workspace' });
+    }
+  };
+  
 
 
-export {getAllHosts, registerHost, loginHost, createKey, uploadVideoToYouTube, initiateOAuth2Authorization, handleOAuth2Callback}
+export {getAllHosts, registerHost, loginHost, createKey, uploadVideoToYouTube, initiateOAuth2Authorization, handleOAuth2Callback, workspace}

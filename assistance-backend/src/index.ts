@@ -18,10 +18,10 @@ const cors = require("cors");
 import { registerEditor } from './routes/editor';
 import { loginEditor } from './routes/editor';
 import  {getEditor}  from './routes/editor';
-import { uploadVideo } from './routes/editor';// Import your route handler function
+// { uploadVideo } from './routes/editor';// Import your route handler function
 
 //imports from the host route
-import { getAllHosts } from './routes/host';
+import { getAllHosts, workspace } from './routes/host';
 import { registerHost } from './routes/host';
 import { loginHost } from './routes/host';
 import { createKey } from './routes/host';
@@ -79,7 +79,7 @@ app.post('/createKeys', async (req: Request, res: Response) => {
         res.status(500).json({ error: 'Internal Server Error' });
     }
 });
-app.post("/uploadVideo", uploadVideo);
+// app.post("/uploadVideo", uploadVideo);
 //  app.post('/getKeys', oAuth2Credentials)
 
 // Route for logging in a host
@@ -188,6 +188,9 @@ app.post('/approve/:id', async (req: Request, res: Response) => {
       res.status(500).json({ error: 'Failed to upload video to YouTube' });
     }
   });
+
+  app.post("/workspace", workspace);
+  app.post('/workspace/:workspaceId/upload', uploadVideoToYouTube)
 // // Start the server
 app.listen(3000, () => {
     console.log(`Server is running on port 3000`);

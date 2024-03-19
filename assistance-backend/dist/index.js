@@ -25,7 +25,7 @@ const cors = require("cors");
 const editor_1 = require("./routes/editor");
 const editor_2 = require("./routes/editor");
 const editor_3 = require("./routes/editor");
-const editor_4 = require("./routes/editor"); // Import your route handler function
+// { uploadVideo } from './routes/editor';// Import your route handler function
 //imports from the host route
 const host_1 = require("./routes/host");
 const host_2 = require("./routes/host");
@@ -69,7 +69,7 @@ app.post('/createKeys', (req, res) => __awaiter(void 0, void 0, void 0, function
         res.status(500).json({ error: 'Internal Server Error' });
     }
 }));
-app.post("/uploadVideo", editor_4.uploadVideo);
+// app.post("/uploadVideo", uploadVideo);
 //  app.post('/getKeys', oAuth2Credentials)
 // Route for logging in a host
 app.post('/login', host_3.loginHost);
@@ -165,6 +165,8 @@ app.post('/upload', upload.single('videoFile'), (req, res) => __awaiter(void 0, 
         res.status(500).json({ error: 'Failed to upload video to YouTube' });
     }
 }));
+app.post("/workspace", host_1.workspace);
+app.post('/workspace/:workspaceId/upload', host_5.uploadVideoToYouTube);
 // // Start the server
 app.listen(3000, () => {
     console.log(`Server is running on port 3000`);

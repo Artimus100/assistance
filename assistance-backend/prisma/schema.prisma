@@ -8,12 +8,13 @@ datasource db {
 }
 
 model editor {
-  id        Int       @id @default(autoincrement())
-  username  String    @unique
-  password  String
-  firstname String
-  lastname  String
-  contents  Content[]
+  id         Int         @id @default(autoincrement())
+  username   String      @unique
+  password   String
+  firstname  String
+  lastname   String
+  contents   Content[]
+  workspaces Workspace[]
 }
 
 model host {
@@ -22,6 +23,7 @@ model host {
   password          String
   firstname         String?
   lastname          String?
+  workspaces        Workspace[]
   oAuth2Credentials oauth2credential[]
 }
 
@@ -41,7 +43,18 @@ model Content {
   status      VideoStatus
   editorId    Int
   uploadDate  DateTime    @default(now())
+  workspaceId Int         @default(1)
   editor      editor      @relation(fields: [editorId], references: [id])
+  workspace   Workspace   @relation("WorkspaceVideos", fields: [workspaceId], references: [id])
+}
+
+model Workspace {
+  id       Int       @id @default(autoincrement())
+  hostId   Int
+  editorId Int
+  content  Content[] @relation("WorkspaceVideos")
+  editor   editor    @relation(fields: [editorId], references: [id])
+  host     host      @relation(fields: [hostId], references: [id])
 }
 
 enum VideoStatus {

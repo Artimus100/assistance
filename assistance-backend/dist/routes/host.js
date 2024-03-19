@@ -12,7 +12,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.handleOAuth2Callback = exports.initiateOAuth2Authorization = exports.uploadVideoToYouTube = exports.createKey = exports.loginHost = exports.registerHost = exports.getAllHosts = void 0;
+exports.workspace = exports.handleOAuth2Callback = exports.initiateOAuth2Authorization = exports.uploadVideoToYouTube = exports.createKey = exports.loginHost = exports.registerHost = exports.getAllHosts = void 0;
 const client_1 = require("@prisma/client");
 // import session from 'express-session';
 const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
@@ -200,3 +200,43 @@ function uploadVideoToYouTube(videoKey, metadata) {
     });
 }
 exports.uploadVideoToYouTube = uploadVideoToYouTube;
+const workspace = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        const { hostId, editorId } = req.body;
+        const parsedHostId = parseInt(hostId, 10);
+        const parsedEditorId = parseInt(editorId, 10);
+        // Check if host exists
+        const host = yield prisma.host.findUnique({
+            where: {
+                id: parsedHostId,
+            },
+        });
+        if (!host) {
+            return res.status(404).json({ error: 'Host not found' });
+        }
+        const EditorId = parseInt(req.body.editorId, 10);
+        // Check if editor exists
+        const editor = yield prisma.editor.findUnique({
+            where: {
+                id: parsedEditorId,
+            },
+        });
+        if (!editor) {
+            return res.status(404).json({ error: 'Editor not found' });
+        }
+        res.locals.editorId = editorId; //stores the editor id in locals
+        // Create workspace
+        const workspace = yield prisma.workspace.create({
+            data: {
+                host: { connect: { id: hostId } },
+                editor: { connect: { id: editorId } }
+            }
+        });
+        res.json(workspace);
+    }
+    catch (error) {
+        console.error('Error creating workspace:', error);
+        res.status(500).json({ error: 'Failed to create workspace' });
+    }
+});
+exports.workspace = workspace;
