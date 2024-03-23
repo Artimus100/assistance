@@ -1,41 +1,51 @@
-import React, { useState, ChangeEvent, FormEvent } from 'react';
+import React, { useState } from 'react';
 import axios from 'axios';
 
-const UploadVideoForm = () => {
-  const [title, setTitle] = useState('');
-  const [description, setDescription] = useState('');
-  const [editorId, setEditorId] = useState('');
-  const [videoFile, setVideoFile] = useState<File | null>(null);
-  const [message, setMessage] = useState('');
+const UploadVideoForm: React.FC = () => {
+  const [file, setFile] = useState<File | null>(null);
+  const [metadata, setMetadata] = useState<{ [key: string]: string }>({
+    title: '',
+    description: '',
+    tags: '',
+  });
 
-  const handleFileChange = (e: ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files.length > 0) {
-      setVideoFile(e.target.files[0]);
+  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    if (event.target.files && event.target.files[0]) {
+      setFile(event.target.files[0]);
     }
   };
 
-  const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    if (!videoFile) {
-      setMessage('Please select a video file');
+  const handleMetadataChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = event.target;
+    setMetadata(prevMetadata => ({
+      ...prevMetadata,
+      [name]: value,
+    }));
+  };
+
+  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+
+    if (!file) {
+      console.error('No file selected');
       return;
     }
+
     const formData = new FormData();
-    formData.append('title', title);
-    formData.append('description', description);
-    formData.append('editorId', editorId);
-    formData.append('video', videoFile);
+    formData.append('videoFile', file);
+    Object.entries(metadata).forEach(([key, value]) => {
+      formData.append(key, value);
+    });
 
     try {
-      const response = await axios.post('http://localhost:3000/uploadVideo', formData, {
+      const response = await axios.post('/upload', formData, {
         headers: {
           'Content-Type': 'multipart/form-data',
         },
       });
-      setMessage(response.data.message);
+      console.log(response.data);
     } catch (error) {
       console.error('Error uploading video:', error);
-      setMessage('Failed to upload video');
     }
   };
 
@@ -44,24 +54,37 @@ const UploadVideoForm = () => {
       <h2>Upload Video</h2>
       <form onSubmit={handleSubmit}>
         <div>
-          <label>Title:</label>
-          <input type="text" value={title} onChange={(e: ChangeEvent<HTMLInputElement>) => setTitle(e.target.value)} required />
+          <input type="file" accept="video/*" onChange={handleFileChange} />
         </div>
         <div>
-          <label>Description:</label>
-          <textarea value={description} onChange={(e: ChangeEvent<HTMLTextAreaElement>) => setDescription(e.target.value)} required />
+          <input
+            type="text"
+            name="title"
+            placeholder="Title"
+            value={metadata.title}
+            onChange={handleMetadataChange}
+          />
         </div>
         <div>
-          <label>Editor ID:</label>
-          <input type="text" value={editorId} onChange={(e: ChangeEvent<HTMLInputElement>) => setEditorId(e.target.value)} required />
+          <input
+            type="text"
+            name="description"
+            placeholder="Description"
+            value={metadata.description}
+            onChange={handleMetadataChange}
+          />
         </div>
         <div>
-          <label>Upload Video:</label>
-          <input type="file" accept="video/*" onChange={handleFileChange} required />
+          <input
+            type="text"
+            name="tags"
+            placeholder="Tags (comma-separated)"
+            value={metadata.tags}
+            onChange={handleMetadataChange}
+          />
         </div>
         <button type="submit">Upload</button>
       </form>
-      {message && <p>{message}</p>}
     </div>
   );
 };

@@ -1,15 +1,14 @@
 import React from 'react';
 
-const AuthButton: React.FC = () => {
-  const handleAuth = () => {
-    window.location.href = 'http://localhost:3000/authorize';
+const OAuthLoginButton: React.FC = () => {
+  const handleLogin = () => {
+    // Redirect the user to the backend server for OAuth authorization
+    window.location.href = 'http://localhost:3000/auth';
   };
 
   return (
-    <div>
-      <button onClick={handleAuth}>Authorize</button>
-    </div>
+    <button onClick={handleLogin}>Login with OAuth</button>
   );
 };
 
-export default AuthButton;
+export default OAuthLoginButton;

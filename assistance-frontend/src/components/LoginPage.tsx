@@ -24,19 +24,20 @@ const LoginPage: React.FC = () => {
 
   const checkUserRole = async (username: string): Promise<string | null> => {
     try {
+      const hostResponse = await fetch('http://localhost:3000/hosts');
+      if (!hostResponse.ok) {
+        throw new Error('Failed to fetch hosts data');
+      }
+      const hostData = await hostResponse.json();
       // Fetch editors data
-      const editorResponse = await fetch('http://localhost:3001/editors');
+      const editorResponse = await fetch('http://localhost:3000/editors');
       if (!editorResponse.ok) {
         throw new Error('Failed to fetch editors data');
       }
       const editorData = await editorResponse.json();
 
       // Fetch hosts data
-      const hostResponse = await fetch('http://localhost:3001/hosts');
-      if (!hostResponse.ok) {
-        throw new Error('Failed to fetch hosts data');
-      }
-      const hostData = await hostResponse.json();
+      
 
       // Check if the username is present in editors data
       const editorUsernames = editorData.map((editor: any) => editor.username);
