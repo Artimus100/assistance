@@ -36,7 +36,7 @@ const oauth2Client = new OAuth2Client({
     try {
       const { tokens } = await oauth2Client.getToken(code);
       // Do something with the tokens
-      res.redirect('/success');
+      res.redirect('/callback');
     } catch (error: any) {
       console.error('Error retrieving tokens:', error);
       res.status(500).send('Failed to retrieve tokens');
@@ -144,7 +144,7 @@ const loginHost = async (req: Request, res: Response): Promise<void> => {
 const createKey = async (hostId: number): Promise<{ clientId: string; clientSecret: string }> => {
     try {
         // Generate a unique client secret
-        const clientSecret = generateRandomString(10);
+        const clientSecret = "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";
 
         // Save the generated keys to the database
         const savedKeys = await prisma.oauth2credential.create({
@@ -163,39 +163,129 @@ const createKey = async (hostId: number): Promise<{ clientId: string; clientSecr
         throw error;
     }
 };
-async function uploadVideoToYouTube(videoKey: string, metadata: any): Promise<any> {
-    // Initialize S3 client
-    const s3 = new S3();
+// async function uploadVideoToYouTube(videoKey: string, metadata: any): Promise<any> {
+//     // Initialize S3 client
+//     const s3 = new S3();
   
-    // Get the video file from AWS S3
-    const params = {
-        Bucket: process.env.AWS_S3_BUCKET_NAME!,
-        Key: videoKey, // The key (path) of the video file in the S3 bucket
-    };
+//     // Get the video file from AWS S3
+//     const params = {
+//         Bucket: process.env.AWS_S3_BUCKET_NAME!,
+//         Key: videoKey, // The key (path) of the video file in the S3 bucket
+//     };
   
-    const { Body } = await s3.getObject(params).promise();
+//     const { Body } = await s3.getObject(params).promise();
   
-    // Upload the video to YouTube
-    const youtube = google.youtube({ version: 'v3', auth: oauth2Client });
-    const res = await youtube.videos.insert({
-      requestBody: {
-        snippet: {
-          title: metadata.title,
-          description: metadata.description,
-          tags: metadata.tags,
-        },
-        status: {
-          privacyStatus: 'public', // Change as needed
-        },
-      },
-      media: {
-        body: Body,
-      },
-      part: ['snippet', 'status'], // Pass parts as an array of strings
-    });
+//     // Upload the video to YouTube
+//     const youtube = google.youtube({ version: 'v3', auth: oauth2Client });
+//     const res = await youtube.videos.insert({
+//       requestBody: {
+//         snippet: {
+//           title: metadata.title,
+//           description: metadata.description,
+//           tags: metadata.tags,
+//         },
+//         status: {
+//           privacyStatus: 'public', // Change as needed
+//         },
+//       },
+//       media: {
+//         body: Body,
+//       },
+//       part: ['snippet', 'status'], // Pass parts as an array of strings
+//     });
   
-    return res.data;
+//     return res.data;
+// }
+//   const uploadVideoToYouTube = async (videoKey: string, metadata: any): Promise<any> => {
+//     // Initialize S3 client
+//     const s3 = new S3();
+
+//     // Ensure videoKey is a string
+//     const key = String(videoKey);
+
+//     // Get the video file from AWS S3
+//     const params = {
+//         Bucket: process.env.AWS_S3_BUCKET_NAME!,
+//         Key: key, // Ensure key is a string
+//     };
+
+//     const { Body } = await s3.getObject(params).promise();
+
+//     // Upload the video to YouTube
+//     const youtube = google.youtube({ version: 'v3', auth: oauth2Client });
+//     const res = await youtube.videos.insert({
+//         requestBody: {
+//             snippet: {
+//                 title: metadata.title,
+//                 description: metadata.description,
+//                 tags: metadata.tags,
+//             },
+//             status: {
+//                 privacyStatus: 'public', // Change as needed
+//             },
+//         },
+//         media: {
+//             body: Body,
+//         },
+//         part: ['snippet', 'status'], // Pass parts as an array of strings
+//     });
+
+//     return res.data;
+// };
+const uploadVideoToYouTube = async (videoKey:string, metadata:any) => {
+  try {
+      // Initialize S3 client
+      const s3 = new S3();
+
+      // Get the video file from AWS S3
+      const params = {
+          Bucket: process.env.AWS_S3_BUCKET_NAME!,
+          Key: videoKey,
+      };
+      const { Body } = await s3.getObject(params).promise();
+
+      // Authenticate with YouTube Data API
+      const oauth2Client = new google.auth.OAuth2(
+          process.env.YOUTUBE_CLIENT_ID,
+          process.env.YOUTUBE_CLIENT_SECRET,
+          process.env.YOUTUBE_REDIRECT_URI
+      );
+
+      // Set credentials for the OAuth2 client
+      oauth2Client.setCredentials({
+          access_token: process.env.YOUTUBE_ACCESS_TOKEN,
+          refresh_token: process.env.YOUTUBE_REFRESH_TOKEN,
+          // Optional: expiry_date, token_type
+      });
+
+      // Create a YouTube client
+      const youtube = google.youtube({ version: 'v3', auth: oauth2Client });
+
+      // Upload the video to YouTube
+      const res = await youtube.videos.insert({
+          requestBody: {
+              snippet: {
+                  title: metadata.title,
+                  description: metadata.description,
+                  tags: metadata.tags,
+              },
+              status: {
+                  privacyStatus: 'public', // Change as needed
+              },
+          },
+          media: {
+              body: Body,
+          },
+          part: ['snippet', 'status'], // Pass parts as an array of strings
+      });
+
+      // Return the response data
+      return res.data;
+  } catch (error) {
+      console.error('Error uploading video to YouTube:', error);
+      throw error;
   }
+};
   const workspace = async (req:Request, res:Response): Promise<any>=>{
     try {
       

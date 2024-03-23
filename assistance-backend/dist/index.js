@@ -18,6 +18,7 @@ const multer_1 = __importDefault(require("multer"));
 const aws_sdk_1 = __importDefault(require("aws-sdk"));
 const multer_s3_1 = __importDefault(require("multer-s3"));
 const client_s3_1 = require("@aws-sdk/client-s3");
+const axios_1 = __importDefault(require("axios"));
 const cors = require("cors");
 // import session from 'express-session';
 // import {hostRouter} from './routes/host';
@@ -40,13 +41,6 @@ const app = express();
 const prisma = new client_1.PrismaClient();
 app.use(cors());
 app.use(express.json());
-// app.use(session({ secret: 'your_secret_key', resave: false, saveUninitialized: true }));
-// app.use("/host", hostRouter);
-// app.use("/editor", editorRouter);
-// app.listen(3001, ()=>console.log("running properlu"));
-// const express = require("express");
-// const app = express();
-// Set your desired port
 // // Define your routes
 app.get('/editors', editor_3.getEditor);
 app.post('/registerEditor', editor_1.registerEditor);
@@ -69,7 +63,7 @@ app.post('/createKeys', (req, res) => __awaiter(void 0, void 0, void 0, function
         res.status(500).json({ error: 'Internal Server Error' });
     }
 }));
-// app.post("/uploadVideo", uploadVideo);
+app.post("/uploadVideo", editor_1.uploadVideo);
 //  app.post('/getKeys', oAuth2Credentials)
 // Route for logging in a host
 app.post('/login', host_3.loginHost);
@@ -167,6 +161,49 @@ app.post('/upload', upload.single('videoFile'), (req, res) => __awaiter(void 0, 
 }));
 app.post("/workspace", host_1.workspace);
 app.post('/workspace/:workspaceId/upload', host_5.uploadVideoToYouTube);
+app.get('/auth', (req, res) => {
+    // Define the required scopes
+    const scopes = ['openid', 'profile', 'email'].join(' ');
+    // Redirect the user to the authorization server's authorization endpoint
+    // Include necessary parameters like client ID, redirect URI, and scope
+    const authorizationEndpoint = 'https://accounts.google.com/o/oauth2/auth';
+    const clientId = '975807587258-1b81eb7ktm6fri0e99rlmm5png3k6i61.apps.googleusercontent.com';
+    const redirectUri = 'http://localhost:3000/callback';
+    res.redirect(`${authorizationEndpoint}?client_id=${clientId}&redirect_uri=${redirectUri}&response_type=code&scope=${scopes}`);
+});
+// Callback route to handle the authorization code sent by the authorization server
+app.get('/callback', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const authorizationCode = req.query.code;
+    try {
+        // Exchange the authorization code for access tokens
+        const tokenResponse = yield exchangeAuthorizationCode(authorizationCode);
+        // Log the authorization code and tokens
+        console.log('Authorization code:', authorizationCode);
+        console.log('Token response:', tokenResponse.data);
+        // Here you can handle the received access token or do any other necessary actions
+        // For example, you can save the access token to use it for subsequent API requests
+        res.send('Authorization code exchanged successfully');
+    }
+    catch (error) {
+        console.error('Error exchanging authorization code for tokens:', error);
+        res.status(500).json({ error: 'Failed to exchange authorization code for tokens' });
+    }
+}));
+function exchangeAuthorizationCode(authorizationCode) {
+    return __awaiter(this, void 0, void 0, function* () {
+        // Make a request to the authorization server's token endpoint to exchange the code for tokens
+        // You'll need to use a library like axios or node-fetch for making HTTP requests
+        // Example using axios:
+        const tokenResponse = yield axios_1.default.post('https://oauth2.googleapis.com/token', {
+            grant_type: 'authorization_code',
+            code: authorizationCode,
+            client_id: '975807587258-1b81eb7ktm6fri0e99rlmm5png3k6i61.apps.googleusercontent.com',
+            client_secret: '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',
+            redirect_uri: 'http://localhost:3000/callback'
+        });
+        return tokenResponse;
+    });
+}
 // // Start the server
 app.listen(3000, () => {
     console.log(`Server is running on port 3000`);

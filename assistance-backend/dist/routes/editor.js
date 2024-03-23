@@ -12,7 +12,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.uploadToWorkSpace = exports.loginEditor = exports.getEditor = exports.registerEditor = void 0;
+exports.uploadVideo = exports.uploadToWorkSpace = exports.loginEditor = exports.getEditor = exports.registerEditor = void 0;
 const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
 const bcrypt_1 = __importDefault(require("bcrypt"));
 const multer_1 = __importDefault(require("multer"));
@@ -48,15 +48,15 @@ const registerEditor = (req, res) => __awaiter(void 0, void 0, void 0, function*
         const editor = yield prisma.editor.create({
             data: {
                 username,
-                password: hashedPassword,
                 firstname,
                 lastname,
+                password: hashedPassword
             },
         });
         res.status(500).json(editor);
     }
     catch (error) {
-        console.error('Error registering editor:', error);
+        console.error('Error registering ediqwcdeq23edqtor:', error);
         throw new Error('Failed to register editor');
     }
 });
@@ -89,56 +89,58 @@ const loginEditor = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
     }
 });
 exports.loginEditor = loginEditor;
-// const uploadVideo = async (req: Request, res: Response): Promise<void> => {
-//     try {
-//       const s3 = new aws.S3({
-//         accessKeyId:process.env.AWS_ACCESS_KEY_ID,
-//         secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
-//       });
-//       // Create a multer instance for handling file uploads
-//       const upload = multer({
-//         storage: multer.memoryStorage(), // Store files in memory before uploading to S3
-//         limits: {
-//           fileSize: 2 * 1024 * 1024 * 1024, // Maximum file size (2GB)
-//         },
-//       }).single('video'); // Specify the field name for the uploaded file
-//       // Handle file upload using multer
-//       upload(req, res, async (err: any) => {
-//         if (err) {
-//           console.error('Error uploading file:', err);
-//           return res.status(500).json({ error: 'Failed to upload file' });
-//         }
-//         // Check if req.file exists
-//         if (!req.file) {
-//           return res.status(400).json({ error: 'No file uploaded' });
-//         }
-//         const { title, description, editorId } = req.body;
-//         // Generate a unique key for the file in S3
-//         const key = `videos/${uuidv4()}-${req.file.originalname}`;
-//         // Upload file to AWS S3 bucket
-//         const params = {
-//           Bucket: process.env.AWS_S3_BUCKET_NAME!,
-//           Key: key,
-//           Body: req.file.buffer,
-//         };
-//         await s3.upload(params).promise();
-//         // Save the uploaded file details to the database
-//         const uploadedContent = await prisma.content.create({
-//           data: {
-//             title,
-//             description,
-//             videoFile: key,
-//             status: 'PENDING', // Store the S3 key in the database
-//             editorId: parseInt(editorId),
-//           },
-//         });
-//         res.status(201).json({ message: 'Video uploaded successfully', content: uploadedContent });
-//       });
-//     } catch (error) {
-//       console.error('Error uploading video:', error);
-//       res.status(500).json({ error: 'Failed to upload video' });
-//     }
-//   };
+const uploadVideo = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        const s3 = new aws_sdk_1.default.S3({
+            accessKeyId: process.env.AWS_ACCESS_KEY_ID,
+            secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
+        });
+        // Create a multer instance for handling file uploads
+        const upload = (0, multer_1.default)({
+            storage: multer_1.default.memoryStorage(), // Store files in memory before uploading to S3
+            limits: {
+                fileSize: 2 * 1024 * 1024 * 1024, // Maximum file size (2GB)
+            },
+        }).single('video'); // Specify the field name for the uploaded file
+        // Handle file upload using multer
+        upload(req, res, (err) => __awaiter(void 0, void 0, void 0, function* () {
+            if (err) {
+                console.error('Error uploading file:', err);
+                return res.status(500).json({ error: 'Failed to upload file' });
+            }
+            // Check if req.file exists
+            if (!req.file) {
+                return res.status(400).json({ error: 'No file uploaded' });
+            }
+            const { title, description, editorId } = req.body;
+            // Generate a unique key for the file in S3
+            const key = `videos/${(0, uuid_1.v4)()}-${req.file.originalname}`;
+            // Upload file to AWS S3 bucket
+            const params = {
+                Bucket: process.env.AWS_S3_BUCKET_NAME,
+                Key: key,
+                Body: req.file.buffer,
+            };
+            yield s3.upload(params).promise();
+            // Save the uploaded file details to the database
+            const uploadedContent = yield prisma.content.create({
+                data: {
+                    title,
+                    description,
+                    videoFile: key,
+                    status: 'PENDING', // Store the S3 key in the database
+                    editorId: parseInt(editorId),
+                },
+            });
+            res.status(201).json({ message: 'Video uploaded successfully', content: uploadedContent });
+        }));
+    }
+    catch (error) {
+        console.error('Error uploading video:', error);
+        res.status(500).json({ error: 'Failed to upload video' });
+    }
+});
+exports.uploadVideo = uploadVideo;
 const uploadToWorkSpace = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const { workspaceId } = req.params;
