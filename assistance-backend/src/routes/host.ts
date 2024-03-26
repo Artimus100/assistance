@@ -1,4 +1,4 @@
-import { Request, Response } from 'express';
+import { Request, Response,NextFunction } from 'express';
 import { PrismaClient } from '@prisma/client';
 // import session from 'express-session';
 import jwt from 'jsonwebtoken';
@@ -11,6 +11,13 @@ import { S3 } from 'aws-sdk';
 
 const prisma = new PrismaClient();
 const OAuth2Client = google.auth.OAuth2;
+declare global {
+  namespace Express {
+    interface Request {
+      userRole: 'host' | 'editor';
+    }
+  }
+}
 
 
 const oauth2Client = new OAuth2Client({
@@ -66,64 +73,69 @@ const getAllHosts = async (req: Request, res: Response): Promise<void> => {
         res.status(500).json({ error: 'Internal Server Error' });
     }
 };
-const registerHost = async (req: Request, res: Response): Promise<void> => {
-    try {
-      const { username, firstname, lastname, password } = req.body;
-  
-      // Check if the username already exists
-      const existingHost = await prisma.host.findUnique({ where: { username } });
-      if (existingHost) {
-        // Username already exists, handle the error or notify the user
-        res.status(400).json({ error: 'Username already exists' });
-        return;
-      }
-  
-      // Proceed with host creation since the username is unique
-      const hashedPassword = await bcrypt.hash(password, 10);
-      const host = await prisma.host.create({
-        data: {
-          username,
-          firstname,
-          lastname,
-          password: hashedPassword,
-        },
-      });
-  
-      res.status(201).json(host);
-    } catch (error) {
-      console.error('Error registering host:', error);
-      res.status(500).json({ error: 'Internal Server Error' });
-    }
-  };
 
+const registerHost = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const { username, firstname, lastname, password } = req.body;
+
+    // Check if the username already exists
+    const existingHost = await prisma.host.findUnique({ where: { username } });
+    if (existingHost) {
+      // Username already exists, handle the error or notify the user
+      res.status(400).json({ error: 'Username already exists' });
+      return;
+    }
+
+    // Proceed with host creation since the username is unique
+    const hashedPassword = await bcrypt.hash(password, 10);
+    const createdHost = await prisma.host.create({
+      data: {
+        username,
+        firstname,
+        lastname,
+        password: hashedPassword,
+      },
+    });
+
+    // Generate JWT token
+    const token = jwt.sign({ username, role: 'host' }, secretKey, { expiresIn: '1h' });
+
+    // Respond with token and host data
+    res.status(201).json({ host: createdHost, token });
+  } catch (error) {
+    console.error('Error registering host:', error);
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+};
+interface JwtPayload {
+  username: string;
+  role: 'host'; // Assuming it's always 'host' for loginHost
+}
 // Log in a host
 const loginHost = async (req: Request, res: Response): Promise<void> => {
-    try {
-        const { username, password } = req.body;
-        const host = await prisma.host.findUnique({
-            where: {
-                username,
-            },
-        });
+  try {
+    const { username, password } = req.body;
+    const host = await prisma.host.findUnique({
+      where: { username },
+    });
 
-        if (!host) {
-            res.status(401).json({ error: 'Invalid credentials' });
-            return;
-        }
-
-        const passwordMatch = await bcrypt.compare(password, host.password);
-        if (!passwordMatch) {
-            res.status(401).json({ error: 'Invalid credentials' });
-            return;
-        }
-
-        // Generate JWT token
-        const token = jwt.sign({ id: host.id, email: host.username }, 'your_secret_key', { expiresIn: '1h' });
-        res.status(200).json({ token });
-    } catch (err) {
-        console.error('Error logging in host', err);
-        res.status(500).json({ error: 'Internal Server Error' });
+    if (!host || !(await bcrypt.compare(password, host.password))) {
+      res.status(401).json({ error: 'Invalid credentials' });
+      return;
     }
+
+    // Generate JWT token with username and role only
+    const token = jwt.sign(
+      { username: host.username, role: 'host' } as JwtPayload,
+      secretKey,
+      { expiresIn: '1h' }
+    );
+
+    res.status(200).json({ token });
+  } catch (err) {
+    console.error('Error logging in host', err);
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
 };
 // const createKey = (): { clientId: string; clientSecret: string } => {
 //     const oauth2Client = new google.auth.OAuth2();
@@ -328,7 +340,65 @@ const uploadVideoToYouTube = async (videoKey:string, metadata:any) => {
       res.status(500).json({ error: 'Failed to create workspace' });
     }
   };
+
+// Function to generate JWT token for the host
+const secretKey = 'rahul';
+
+// Middleware to authenticate JWT token
+ const generateToken = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const { username } = req.body;
+
+    // Create payload for the JWT token
+    const payload = {
+      username,
+      role: 'host', // Assuming the role is 'host' for this example
+    };
+
+    // Generate JWT token with payload and secret key
+    const token = jwt.sign(payload, secretKey, { expiresIn: '1h' }); // Token expires in 1 hour
+
+    // Send the token in the response
+    res.status(200).json({ token });
+  } catch (error) {
+    console.error('Error generating token:', error);
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+};
+const authenticateToken = (req: Request, res: Response, next: NextFunction): any => {
+  // Get the token from the request headers
+  const authHeader = req.headers.authorization;
+  
+  if (!authHeader) {
+    return res.status(401).json({ error: 'Token is missing' });
+  }
+
+  // Extract the actual token from the authorization header
+  const token = authHeader.split(' ')[1]; // Split the authorization header and get the token part
+
+  // Verify the JWT token
+  jwt.verify(token, secretKey, (err, decoded) => {
+    if (err) {
+      return res.status(403).json({ error: 'Invalid token' });
+    }
+
+    // Check the decoded payload to determine the role
+    const { username, role } = decoded as { username: string; role: string };
+    if (role === 'host') {
+      // If the role is 'host', set the user role in the request object
+      req.userRole = 'host';
+    } else {
+      // If the role is not 'host', set the user role as 'editor' by default
+      req.userRole = 'editor';
+    }
+
+    // Move to the next middleware
+    next();
+  });
+};
+
+
   
 
 
-export {getAllHosts, registerHost, loginHost, createKey, uploadVideoToYouTube, initiateOAuth2Authorization, handleOAuth2Callback, workspace}
+export {getAllHosts, registerHost, loginHost, createKey, uploadVideoToYouTube, initiateOAuth2Authorization, handleOAuth2Callback, workspace,generateToken}

@@ -34,30 +34,31 @@ const getEditor = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
 exports.getEditor = getEditor;
 const registerEditor = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
-        const { username, password, firstname, lastname } = req.body;
-        const existingEditor = yield prisma.editor.findUnique({
-            where: {
-                username
-            }
-        });
+        const { username, firstname, lastname, password } = req.body;
+        // Check if the username already exists
+        const existingEditor = yield prisma.editor.findUnique({ where: { username } });
         if (existingEditor) {
             res.status(400).json({ error: 'Username already exists' });
-            return;
+            return; // Exit the function to avoid sending multiple responses
         }
+        // Proceed with editor creation since the username is unique
         const hashedPassword = yield bcrypt_1.default.hash(password, 10);
-        const editor = yield prisma.editor.create({
+        const createdEditor = yield prisma.editor.create({
             data: {
                 username,
                 firstname,
                 lastname,
-                password: hashedPassword
+                password: hashedPassword,
             },
         });
-        res.status(500).json(editor);
+        // Generate JWT token
+        const token = jsonwebtoken_1.default.sign({ username, role: 'editor' }, 'your-secret-key', { expiresIn: '1h' });
+        // Respond with token and editor data
+        res.status(201).json({ editor: createdEditor, token });
     }
     catch (error) {
-        console.error('Error registering ediqwcdeq23edqtor:', error);
-        throw new Error('Failed to register editor');
+        console.error('Error registering editor:', error);
+        res.status(500).json({ error: 'Internal Server Error' });
     }
 });
 exports.registerEditor = registerEditor;
@@ -80,7 +81,7 @@ const loginEditor = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
             res.status(401).json({ error: 'Unauthorized' });
             return;
         }
-        const token = jsonwebtoken_1.default.sign({ id: editor.id, email: editor.username }, 'your_secret_key', { expiresIn: '1h' });
+        const token = jsonwebtoken_1.default.sign({ id: editor.id, email: editor.username }, 'rahul', { expiresIn: '1h' });
         res.status(200).json({ message: 'Login successful', editor, token });
     }
     catch (err) {

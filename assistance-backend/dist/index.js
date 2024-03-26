@@ -19,6 +19,7 @@ const aws_sdk_1 = __importDefault(require("aws-sdk"));
 const multer_s3_1 = __importDefault(require("multer-s3"));
 const client_s3_1 = require("@aws-sdk/client-s3");
 const axios_1 = __importDefault(require("axios"));
+const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
 const cors = require("cors");
 // import session from 'express-session';
 // import {hostRouter} from './routes/host';
@@ -48,6 +49,52 @@ app.post('/loginEditor', editor_2.loginEditor);
 //Routes for hosts
 app.get('/hosts', host_1.getAllHosts);
 app.post('/register', host_2.registerHost);
+const secretKey = 'rahul';
+const authenticateToken = (req, res, next) => {
+    // Get the token from the request headers
+    const authHeader = req.headers['authorization'];
+    if (!authHeader) {
+        res.status(401).json({ error: 'Token is missing' });
+        return;
+    }
+    // Extract the actual token from the authorization header
+    const token = authHeader.split(' ')[1];
+    // Verify the JWT token
+    jsonwebtoken_1.default.verify(token, secretKey, (err, decoded) => {
+        if (err) {
+            res.status(403).json({ error: 'Invalid token' });
+            return;
+        }
+        // Check the decoded payload to determine the role
+        const { username, role } = decoded;
+        if (!username || !role) {
+            res.status(403).json({ error: 'Invalid token payload' });
+            return;
+        }
+        // Set the user role in the request object
+        req.userRole = role;
+        // Move to the next middleware
+        next();
+    });
+};
+app.get('/Dashboard', authenticateToken, (req, res) => {
+    try {
+        // Access the authenticated user role from req.userRole
+        const userRole = req.userRole;
+        if (userRole === 'host') {
+            // If user is host, allow access to the protected route
+            res.status(200).json({ message: 'Welcome, host!' });
+        }
+        else {
+            // If user is not host, deny access to the protected route
+            res.status(403).json({ error: 'Access forbidden' });
+        }
+    }
+    catch (error) {
+        console.error('Error accessing dashboard:', error);
+        res.status(500).json({ error: 'Internal Server Error' });
+    }
+});
 app.post('/createKeys', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         // Assuming hostId is sent in the request body

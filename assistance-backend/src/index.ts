@@ -7,6 +7,8 @@ import multerS3 from 'multer-s3';
 import { S3Client } from '@aws-sdk/client-s3';
 import axios, { AxiosResponse } from 'axios';
 import { OAuth2Client } from 'google-auth-library';
+import {  NextFunction } from 'express';
+import jwt, { JwtPayload } from 'jsonwebtoken';
 
 
 
@@ -25,7 +27,7 @@ import  {getEditor}  from './routes/editor';
 // { uploadVideo } from './routes/editor';// Import your route handler function
 
 //imports from the host route
-import { getAllHosts, workspace } from './routes/host';
+import {generateToken, getAllHosts, workspace } from './routes/host';
 import { registerHost } from './routes/host';
 import { loginHost } from './routes/host';
 import { createKey } from './routes/host';
@@ -72,6 +74,59 @@ app.post('/loginEditor', loginEditor);
 //Routes for hosts
 app.get('/hosts', getAllHosts);
 app.post('/register', registerHost);
+const secretKey = 'rahul';
+
+const authenticateToken = (req: Request, res: Response, next: NextFunction): void => {
+  // Get the token from the request headers
+  const authHeader = req.headers['authorization'];
+
+  if (!authHeader) {
+    res.status(401).json({ error: 'Token is missing' });
+    return;
+  }
+
+  // Extract the actual token from the authorization header
+  const token = authHeader.split(' ')[1];
+
+  // Verify the JWT token
+  jwt.verify(token, secretKey, (err, decoded) => {
+    if (err) {
+      res.status(403).json({ error: 'Invalid token' });
+      return;
+    }
+
+    // Check the decoded payload to determine the role
+    const { username, role } = decoded as { username: string; role: 'host' | 'editor' };
+    if (!username || !role) {
+      res.status(403).json({ error: 'Invalid token payload' });
+      return;
+    }
+
+    // Set the user role in the request object
+    req.userRole = role;
+
+    // Move to the next middleware
+    next();
+  });
+};
+app.get('/Dashboard', authenticateToken,  (req: Request, res: Response) => {
+  try {
+    // Access the authenticated user role from req.userRole
+    const userRole = req.userRole;
+
+    if (userRole === 'host') {
+      // If user is host, allow access to the protected route
+      res.status(200).json({ message: 'Welcome, host!' });
+    } else {
+      // If user is not host, deny access to the protected route
+      res.status(403).json({ error: 'Access forbidden' });
+    }
+  } catch (error) {
+    console.error('Error accessing dashboard:', error);
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+})
+
 app.post('/createKeys', async (req: Request, res: Response) => {
     try {
         // Assuming hostId is sent in the request body

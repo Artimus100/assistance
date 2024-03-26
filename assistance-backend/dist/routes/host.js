@@ -12,7 +12,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.workspace = exports.handleOAuth2Callback = exports.initiateOAuth2Authorization = exports.uploadVideoToYouTube = exports.createKey = exports.loginHost = exports.registerHost = exports.getAllHosts = void 0;
+exports.generateToken = exports.workspace = exports.handleOAuth2Callback = exports.initiateOAuth2Authorization = exports.uploadVideoToYouTube = exports.createKey = exports.loginHost = exports.registerHost = exports.getAllHosts = void 0;
 const client_1 = require("@prisma/client");
 // import session from 'express-session';
 const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
@@ -89,7 +89,7 @@ const registerHost = (req, res) => __awaiter(void 0, void 0, void 0, function* (
         }
         // Proceed with host creation since the username is unique
         const hashedPassword = yield bcrypt_1.default.hash(password, 10);
-        const host = yield prisma.host.create({
+        const createdHost = yield prisma.host.create({
             data: {
                 username,
                 firstname,
@@ -97,7 +97,10 @@ const registerHost = (req, res) => __awaiter(void 0, void 0, void 0, function* (
                 password: hashedPassword,
             },
         });
-        res.status(201).json(host);
+        // Generate JWT token
+        const token = jsonwebtoken_1.default.sign({ username, role: 'host' }, secretKey, { expiresIn: '1h' });
+        // Respond with token and host data
+        res.status(201).json({ host: createdHost, token });
     }
     catch (error) {
         console.error('Error registering host:', error);
@@ -110,21 +113,14 @@ const loginHost = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const { username, password } = req.body;
         const host = yield prisma.host.findUnique({
-            where: {
-                username,
-            },
+            where: { username },
         });
-        if (!host) {
+        if (!host || !(yield bcrypt_1.default.compare(password, host.password))) {
             res.status(401).json({ error: 'Invalid credentials' });
             return;
         }
-        const passwordMatch = yield bcrypt_1.default.compare(password, host.password);
-        if (!passwordMatch) {
-            res.status(401).json({ error: 'Invalid credentials' });
-            return;
-        }
-        // Generate JWT token
-        const token = jsonwebtoken_1.default.sign({ id: host.id, email: host.username }, 'your_secret_key', { expiresIn: '1h' });
+        // Generate JWT token with username and role only
+        const token = jsonwebtoken_1.default.sign({ username: host.username, role: 'host' }, secretKey, { expiresIn: '1h' });
         res.status(200).json({ token });
     }
     catch (err) {
@@ -314,3 +310,52 @@ const workspace = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     }
 });
 exports.workspace = workspace;
+// Function to generate JWT token for the host
+const secretKey = 'rahul';
+// Middleware to authenticate JWT token
+const generateToken = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        const { username } = req.body;
+        // Create payload for the JWT token
+        const payload = {
+            username,
+            role: 'host', // Assuming the role is 'host' for this example
+        };
+        // Generate JWT token with payload and secret key
+        const token = jsonwebtoken_1.default.sign(payload, secretKey, { expiresIn: '1h' }); // Token expires in 1 hour
+        // Send the token in the response
+        res.status(200).json({ token });
+    }
+    catch (error) {
+        console.error('Error generating token:', error);
+        res.status(500).json({ error: 'Internal Server Error' });
+    }
+});
+exports.generateToken = generateToken;
+const authenticateToken = (req, res, next) => {
+    // Get the token from the request headers
+    const authHeader = req.headers.authorization;
+    if (!authHeader) {
+        return res.status(401).json({ error: 'Token is missing' });
+    }
+    // Extract the actual token from the authorization header
+    const token = authHeader.split(' ')[1]; // Split the authorization header and get the token part
+    // Verify the JWT token
+    jsonwebtoken_1.default.verify(token, secretKey, (err, decoded) => {
+        if (err) {
+            return res.status(403).json({ error: 'Invalid token' });
+        }
+        // Check the decoded payload to determine the role
+        const { username, role } = decoded;
+        if (role === 'host') {
+            // If the role is 'host', set the user role in the request object
+            req.userRole = 'host';
+        }
+        else {
+            // If the role is not 'host', set the user role as 'editor' by default
+            req.userRole = 'editor';
+        }
+        // Move to the next middleware
+        next();
+    });
+};

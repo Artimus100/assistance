@@ -11,8 +11,8 @@ model editor {
   id         Int         @id @default(autoincrement())
   username   String      @unique
   password   String
-  firstname  String
-  lastname   String
+  firstname  String?
+  lastname   String?
   contents   Content[]
   workspaces Workspace[]
 }

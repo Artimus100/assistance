@@ -20,32 +20,37 @@ const getEditor = async (req: Request, res: Response): Promise<void> => {
         res.status(500).json({ error: 'Internal Server Error' });
     }
 };
-const registerEditor = async (req: Request, res: Response): Promise<void> =>{
-    try {
-        const {username,password, firstname, lastname} = req.body;
-        const existingEditor = await prisma.editor.findUnique({
-            where:{
-                username
-            }
-        });
-        if(existingEditor){
-            res.status(400).json({ error: 'Username already exists' });
-            return;
-        }
-        const hashedPassword = await bcrypt.hash(password, 10);
-        const editor = await prisma.editor.create({
-            data: {
-                username,
-                firstname,
-                lastname,
-                password: hashedPassword
-            },
-        });
-        res.status(500).json(editor);
-    } catch (error) {
-        console.error('Error registering ediqwcdeq23edqtor:', error);
-        throw new Error('Failed to register editor');
+const registerEditor = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const { username, firstname, lastname, password } = req.body;
+
+    // Check if the username already exists
+    const existingEditor = await prisma.editor.findUnique({ where: { username } });
+    if (existingEditor) {
+      res.status(400).json({ error: 'Username already exists' });
+      return; // Exit the function to avoid sending multiple responses
     }
+
+    // Proceed with editor creation since the username is unique
+    const hashedPassword = await bcrypt.hash(password, 10);
+    const createdEditor = await prisma.editor.create({
+      data: {
+        username,
+        firstname,
+        lastname,
+        password: hashedPassword,
+      },
+    });
+
+    // Generate JWT token
+    const token = jwt.sign({ username, role: 'editor' }, 'your-secret-key', { expiresIn: '1h' });
+
+    // Respond with token and editor data
+    res.status(201).json({ editor: createdEditor, token });
+  } catch (error) {
+    console.error('Error registering editor:', error);
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
 }
 const loginEditor = async (req: Request, res: Response): Promise<void> => {
     try {
@@ -68,7 +73,7 @@ const loginEditor = async (req: Request, res: Response): Promise<void> => {
             res.status(401).json({ error: 'Unauthorized' });
             return;
         }
-        const token = jwt.sign({ id: editor.id, email: editor.username }, 'your_secret_key', { expiresIn: '1h' });
+        const token = jwt.sign({ iusername: editor.username, role: 'editor' }, 'rahul', { expiresIn: '1h' });
         res.status(200).json({ message: 'Login successful', editor, token });
     } catch (err) {
         console.error('Error logging in Editor', err);
