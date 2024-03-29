@@ -21,7 +21,7 @@ const cors = require("cors");
 
 // import {hostRouter} from './routes/host';
 // import editorRouter from './routes/editor';
-import { registerEditor, uploadVideo } from './routes/editor';
+import { registerEditor, uploadToWorkSpace, uploadVideo, checkWorkspace } from './routes/editor';
 import { loginEditor } from './routes/editor';
 import  {getEditor}  from './routes/editor';
 // { uploadVideo } from './routes/editor';// Import your route handler function
@@ -49,31 +49,7 @@ const prisma = new PrismaClient();
 
 app.use(cors());
 app.use(express.json());
-// app.use(session({ secret: 'your_secret_key', resave: false, saveUninitialized: true }));
 
-// app.use("/host", hostRouter);
-// app.use("/editor", editorRouter);
-
-// app.listen(3001, ()=>console.log("running properlu"));
-// const express = require("express");
-
-// const app = express();
- // Set your desired port
- interface TokenResponseData {
-  access_token: string;
-  refresh_token: string;
-  expires_in: number;
-  // Add any other properties you expect in the token response
-}
-// // Define your routes
-app.get('/editors', getEditor);
-app.post('/registerEditor', registerEditor);
-app.post('/loginEditor', loginEditor);
-
-
-//Routes for hosts
-app.get('/hosts', getAllHosts);
-app.post('/register', registerHost);
 const secretKey = 'rahul';
 
 const authenticateToken = (req: Request, res: Response, next: NextFunction): void => {
@@ -109,7 +85,26 @@ const authenticateToken = (req: Request, res: Response, next: NextFunction): voi
     next();
   });
 };
-app.get('/Dashboard', authenticateToken,  (req: Request, res: Response) => {
+
+ interface TokenResponseData {
+  access_token: string;
+  refresh_token: string;
+  expires_in: number;
+  // Add any other properties you expect in the token response
+}
+// // Define your routes
+app.get('/editors', getEditor);
+app.post('/registerEditor', registerEditor);
+app.post('/loginEditor', loginEditor);
+app.post('/editor/workspace/:workspaceId/upload-video', uploadToWorkSpace);
+app.get('/workspace/:workspaceId', checkWorkspace);
+
+
+//Routes for hosts
+app.get('/hosts', getAllHosts);
+app.post('/hosts/register', registerHost);
+
+app.get('/hosts/Dashboard', authenticateToken,  (req: Request, res: Response) => {
   try {
     // Access the authenticated user role from req.userRole
     const userRole = req.userRole;
@@ -127,7 +122,7 @@ app.get('/Dashboard', authenticateToken,  (req: Request, res: Response) => {
   }
 })
 
-app.post('/createKeys', async (req: Request, res: Response) => {
+app.post('/hosts/createKeys', async (req: Request, res: Response) => {
     try {
         // Assuming hostId is sent in the request body
         const { hostId } = req.body;
@@ -143,15 +138,15 @@ app.post('/createKeys', async (req: Request, res: Response) => {
         res.status(500).json({ error: 'Internal Server Error' });
     }
 });
-app.post("/uploadVideo", uploadVideo);
+app.post("/workspace/:workspaceId/uploadVideo", uploadVideo);
 //  app.post('/getKeys', oAuth2Credentials)
 
 // Route for logging in a host
-app.post('/login', loginHost);
+app.post('/hosts/login', loginHost);
 
 // Route to fetch uploaded videos awaiting approval
 // Route to approve a video for publishing
-app.post('/approve/:id', async (req: Request, res: Response) => {
+app.post('/hosts/approve/:id', async (req: Request, res: Response) => {
     const { id } = req.params;
   
     try {
@@ -178,7 +173,7 @@ app.post('/approve/:id', async (req: Request, res: Response) => {
   });
   
   // Route to reject a video
-  app.post('/reject/:id', async (req: Request, res: Response) => {
+  app.post('/hosts/reject/:id', async (req: Request, res: Response) => {
     const { id } = req.params;
   
     try {
@@ -203,7 +198,7 @@ app.post('/approve/:id', async (req: Request, res: Response) => {
       res.status(500).json({ error: 'Failed to reject video' });
     }
   });
-  app.get('/authorize', initiateOAuth2Authorization);
+  app.get('/hosts/authorize', initiateOAuth2Authorization);
   app.get('/oauth2callback', handleOAuth2Callback);
   const s3 = new aws.S3({
     // Configure your AWS credentials and region
@@ -232,26 +227,25 @@ app.post('/approve/:id', async (req: Request, res: Response) => {
   interface CustomFile extends Express.Multer.File {
     key: string;
   }
-   
-  app.post('/upload', upload.single('videoFile'), async (req:Request, res:Response) => {
-    // Check if req.file exists and has the key property
-    if (!req.file || !(req.file as CustomFile).key) {
-      res.status(400).json({ error: 'Video file is missing or invalid' });
-      return;
-    }
+  // app.post('/upload', upload.single('videoFile'), async (req:Request, res:Response) => {
+  //   // Check if req.file exists and has the key property
+  //   if (!req.file || !(req.file as CustomFile).key) {
+  //     res.status(400).json({ error: 'Video file is missing or invalid' });
+  //     return;
+  //   }
   
-    // Assuming you're handling metadata in req.body
-    const metadata = req.body;
+  //   // Assuming you're handling metadata in req.body
+  //   const metadata = req.body;
     
-    try {
-      const videoKey = (req.file as CustomFile).key;
-      const uploadedVideo = await uploadVideoToYouTube(videoKey, metadata);
-      res.status(200).json({ message: 'Video uploaded successfully', video: uploadedVideo });
-    } catch (error) {
-      console.error('Error uploading video to YouTube:', error);
-      res.status(500).json({ error: 'Failed to upload video to YouTube' });
-    }
-  });
+  //   try {
+  //     const videoKey = (req.file as CustomFile).key;
+  //     const uploadedVideo = await uploadVideoToYouTube(videoKey, metadata);
+  //     res.status(200).json({ message: 'Video uploaded successfully', video: uploadedVideo });
+  //   } catch (error) {
+  //     console.error('Error uploading video to YouTube:', error);
+  //     res.status(500).json({ error: 'Failed to upload video to YouTube' });
+  //   }
+  // });
 
   app.post("/workspace", workspace);
   app.post('/workspace/:workspaceId/upload', uploadVideoToYouTube)

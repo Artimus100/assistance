@@ -365,37 +365,37 @@ const secretKey = 'rahul';
     res.status(500).json({ error: 'Internal Server Error' });
   }
 };
-const authenticateToken = (req: Request, res: Response, next: NextFunction): any => {
-  // Get the token from the request headers
-  const authHeader = req.headers.authorization;
+// const authenticateToken = (req: Request, res: Response, next: NextFunction): any => {
+//   // Get the token from the request headers
+//   const authHeader = req.headers.authorization;
   
-  if (!authHeader) {
-    return res.status(401).json({ error: 'Token is missing' });
-  }
+//   if (!authHeader) {
+//     return res.status(401).json({ error: 'Token is missing' });
+//   }
 
-  // Extract the actual token from the authorization header
-  const token = authHeader.split(' ')[1]; // Split the authorization header and get the token part
+//   // Extract the actual token from the authorization header
+//   const token = authHeader.split(' ')[1]; // Split the authorization header and get the token part
 
-  // Verify the JWT token
-  jwt.verify(token, secretKey, (err, decoded) => {
-    if (err) {
-      return res.status(403).json({ error: 'Invalid token' });
-    }
+//   // Verify the JWT token
+//   jwt.verify(token, secretKey, (err, decoded) => {
+//     if (err) {
+//       return res.status(403).json({ error: 'Invalid token' });
+//     }
 
-    // Check the decoded payload to determine the role
-    const { username, role } = decoded as { username: string; role: string };
-    if (role === 'host') {
-      // If the role is 'host', set the user role in the request object
-      req.userRole = 'host';
-    } else {
-      // If the role is not 'host', set the user role as 'editor' by default
-      req.userRole = 'editor';
-    }
+//     // Check the decoded payload to determine the role
+//     const { username, role } = decoded as { username: string; role: string };
+//     if (role === 'host') {
+//       // If the role is 'host', set the user role in the request object
+//       req.userRole = 'host';
+//     } else {
+//       // If the role is not 'host', set the user role as 'editor' by default
+//       req.userRole = 'editor';
+//     }
 
-    // Move to the next middleware
-    next();
-  });
-};
+//     // Move to the next middleware
+//     next();
+//   });
+// };
 
 
   

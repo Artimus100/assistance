@@ -12,7 +12,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.uploadVideo = exports.uploadToWorkSpace = exports.loginEditor = exports.getEditor = exports.registerEditor = void 0;
+exports.checkWorkspace = exports.uploadVideo = exports.uploadToWorkSpace = exports.loginEditor = exports.getEditor = exports.registerEditor = void 0;
 const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
 const bcrypt_1 = __importDefault(require("bcrypt"));
 const multer_1 = __importDefault(require("multer"));
@@ -81,7 +81,7 @@ const loginEditor = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
             res.status(401).json({ error: 'Unauthorized' });
             return;
         }
-        const token = jsonwebtoken_1.default.sign({ id: editor.id, email: editor.username }, 'rahul', { expiresIn: '1h' });
+        const token = jsonwebtoken_1.default.sign({ iusername: editor.username, role: 'editor' }, 'rahul', { expiresIn: '1h' });
         res.status(200).json({ message: 'Login successful', editor, token });
     }
     catch (err) {
@@ -92,6 +92,7 @@ const loginEditor = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
 exports.loginEditor = loginEditor;
 const uploadVideo = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
+        const { workspaceId } = req.params;
         const s3 = new aws_sdk_1.default.S3({
             accessKeyId: process.env.AWS_ACCESS_KEY_ID,
             secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
@@ -100,7 +101,7 @@ const uploadVideo = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
         const upload = (0, multer_1.default)({
             storage: multer_1.default.memoryStorage(), // Store files in memory before uploading to S3
             limits: {
-                fileSize: 2 * 1024 * 1024 * 1024, // Maximum file size (2GB)
+                fileSize: 1024 * 1024 * 1024, // Maximum file size (1GB)
             },
         }).single('video'); // Specify the field name for the uploaded file
         // Handle file upload using multer
@@ -115,7 +116,7 @@ const uploadVideo = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
             }
             const { title, description, editorId } = req.body;
             // Generate a unique key for the file in S3
-            const key = `videos/${(0, uuid_1.v4)()}-${req.file.originalname}`;
+            const key = `videos/${workspaceId}/${(0, uuid_1.v4)()}-${req.file.originalname}`;
             // Upload file to AWS S3 bucket
             const params = {
                 Bucket: process.env.AWS_S3_BUCKET_NAME,
@@ -129,7 +130,7 @@ const uploadVideo = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
                     title,
                     description,
                     videoFile: key,
-                    status: 'PENDING', // Store the S3 key in the database
+                    status: "PENDING", // Store the S3 key in the database
                     editorId: parseInt(editorId),
                 },
             });
@@ -145,11 +146,13 @@ exports.uploadVideo = uploadVideo;
 const uploadToWorkSpace = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const { workspaceId } = req.params;
-        const { videoTitle, videoDescription } = req.body;
+        const { videoTitle, videoDescription, editorId } = req.body;
         const s3 = new aws_sdk_1.default.S3({
             accessKeyId: process.env.AWS_ACCESS_KEY_ID,
             secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
         });
+        // Set the editor ID in res.locals
+        res.locals.editorId = editorId;
         // Check if workspace exists
         const workspace = yield prisma.workspace.findUnique({
             where: { id: parseInt(workspaceId) },
@@ -160,7 +163,7 @@ const uploadToWorkSpace = (req, res) => __awaiter(void 0, void 0, void 0, functi
         }
         // Check if editor is authorized to upload in this workspace
         // For simplicity, you can check if the editor ID matches the one associated with the workspace
-        const editorId = res.locals.editorId; // Retrieve the editorId from res.locals
+        // Retrieve the editorId from res.locals
         if (workspace.editorId !== editorId) {
             return res.status(403).json({ error: 'Unauthorized' });
         }
@@ -210,3 +213,28 @@ const uploadToWorkSpace = (req, res) => __awaiter(void 0, void 0, void 0, functi
     }
 });
 exports.uploadToWorkSpace = uploadToWorkSpace;
+const checkWorkspace = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        // Extract workspaceId from request parameters
+        const { workspaceId } = req.params;
+        // Query the database to check if the workspace exists
+        const workspace = yield prisma.workspace.findUnique({
+            where: {
+                id: parseInt(workspaceId) // Assuming workspace ID is numeric
+            }
+        });
+        // If workspace exists, return success response
+        if (workspace) {
+            res.status(200).json({ message: 'Workspace found', workspace });
+        }
+        else {
+            // If workspace does not exist, return not found response
+            res.status(404).json({ error: 'Workspace not found' });
+        }
+    }
+    catch (error) {
+        console.error('Error checking workspace:', error);
+        res.status(500).json({ error: 'Internal Server Error' });
+    }
+});
+exports.checkWorkspace = checkWorkspace;

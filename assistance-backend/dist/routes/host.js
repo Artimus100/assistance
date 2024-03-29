@@ -332,30 +332,3 @@ const generateToken = (req, res) => __awaiter(void 0, void 0, void 0, function* 
     }
 });
 exports.generateToken = generateToken;
-const authenticateToken = (req, res, next) => {
-    // Get the token from the request headers
-    const authHeader = req.headers.authorization;
-    if (!authHeader) {
-        return res.status(401).json({ error: 'Token is missing' });
-    }
-    // Extract the actual token from the authorization header
-    const token = authHeader.split(' ')[1]; // Split the authorization header and get the token part
-    // Verify the JWT token
-    jsonwebtoken_1.default.verify(token, secretKey, (err, decoded) => {
-        if (err) {
-            return res.status(403).json({ error: 'Invalid token' });
-        }
-        // Check the decoded payload to determine the role
-        const { username, role } = decoded;
-        if (role === 'host') {
-            // If the role is 'host', set the user role in the request object
-            req.userRole = 'host';
-        }
-        else {
-            // If the role is not 'host', set the user role as 'editor' by default
-            req.userRole = 'editor';
-        }
-        // Move to the next middleware
-        next();
-    });
-};
