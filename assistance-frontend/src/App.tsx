@@ -9,7 +9,9 @@ import './App.css'
 import CreatorDashboard from "./components/CreatorDashboard";
 //import UploadForm from './components/UploadForm';
 import AuthButton from './components/AuthButton';
+import EditorWorkspace from "./components/EditorWorkspace"
 import WorkspaceForm from "./components/WorkspaceForm";
+import EditorUploadVideo from "./components/EditorUploadVideo";
 // import UploadVideoToYouTube from "./components/UploadVideoToYoutube"
 const App: React.FC = () => {
   return (
@@ -20,12 +22,13 @@ const App: React.FC = () => {
         {/* <Route path="/oAuth" element={<OAuth2CallbackPage />} /> */}
          <Route path="/auth" element={<AuthButton />} /> 
         <Route path="/creatorDashbord" element={<CreatorDashboard />} />
-         <Route path="/uploadVideo" element={<UploadVideoForm />} /> 
+         <Route path="/workspace/:workspaceId/uploadVideo" element={<UploadVideoForm />} /> 
 
         {/* <Route path="/upload" element={<UploadForm/>}/> */}
-        <Route path="/workspace" element={<WorkspaceForm/>}/>
+        <Route path="/hostWorkspace" element={<WorkspaceForm/>}/>
         {/*  <Route path="/workspaceUpload" element={<UploadVideoToYouTube/>}/>
          */}
+        <Route path="/editorWorkspace" element={<EditorWorkspace/>}/>
       </Routes>
 
       {/* <div>

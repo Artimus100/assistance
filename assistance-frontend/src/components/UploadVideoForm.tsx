@@ -2,90 +2,82 @@ import React, { useState } from 'react';
 import axios from 'axios';
 
 const UploadVideoForm: React.FC = () => {
-  const [file, setFile] = useState<File | null>(null);
-  const [metadata, setMetadata] = useState<{ [key: string]: string }>({
-    title: '',
-    description: '',
-    tags: '',
-  });
+  const [video, setVideo] = useState<File | null>(null);
+  const [title, setTitle] = useState<string>('');
+  const [description, setDescription] = useState<string>('');
+  const [editorId, setEditorId] = useState<string>('');
+  const [errorMessage, setErrorMessage] = useState<string>('');
 
-  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    if (event.target.files && event.target.files[0]) {
-      setFile(event.target.files[0]);
-    }
-  };
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
 
-  const handleMetadataChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = event.target;
-    setMetadata(prevMetadata => ({
-      ...prevMetadata,
-      [name]: value,
-    }));
-  };
-
-  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-
-    if (!file) {
-      console.error('No file selected');
+    if (!video || !title || !description || !editorId) {
+      setErrorMessage('Please fill out all fields');
       return;
     }
 
     const formData = new FormData();
-    formData.append('videoFile', file);
-    Object.entries(metadata).forEach(([key, value]) => {
-      formData.append(key, value);
-    });
+    formData.append('video', video);
+    formData.append('title', title);
+    formData.append('description', description);
+    formData.append('editorId', editorId);
 
     try {
-      const response = await axios.post('/upload', formData, {
+      await axios.post('http://localhost:3000/workspace/:workspaceId/uploadVideo', formData, {
         headers: {
-          'Content-Type': 'multipart/form-data',
-        },
+          'Content-Type': 'multipart/form-data'
+        }
       });
-      console.log(response.data);
+      setErrorMessage('');
+      // Optionally, you can redirect to another page or show a success message
+      alert('Video uploaded successfully');
     } catch (error) {
+      setErrorMessage('Failed to upload video');
       console.error('Error uploading video:', error);
     }
   };
 
   return (
-    <div>
-      <h2>Upload Video</h2>
-      <form onSubmit={handleSubmit}>
-        <div>
-          <input type="file" accept="video/*" onChange={handleFileChange} />
-        </div>
-        <div>
-          <input
-            type="text"
-            name="title"
-            placeholder="Title"
-            value={metadata.title}
-            onChange={handleMetadataChange}
-          />
-        </div>
-        <div>
-          <input
-            type="text"
-            name="description"
-            placeholder="Description"
-            value={metadata.description}
-            onChange={handleMetadataChange}
-          />
-        </div>
-        <div>
-          <input
-            type="text"
-            name="tags"
-            placeholder="Tags (comma-separated)"
-            value={metadata.tags}
-            onChange={handleMetadataChange}
-          />
-        </div>
-        <button type="submit">Upload</button>
-      </form>
-    </div>
+    <form onSubmit={handleSubmit}>
+      <div>
+        <label htmlFor="video">Video:</label>
+        <input
+          type="file"
+          id="video"
+          accept="video/*"
+          name='video'
+          onChange={(e) => setVideo(e.target.files ? e.target.files[0] : null)}
+        />
+      </div>
+      <div>
+        <label htmlFor="title">Title:</label>
+        <input
+          type="text"
+          id="title"
+          value={title}
+          onChange={(e) => setTitle(e.target.value)}
+        />
+      </div>
+      <div>
+        <label htmlFor="description">Description:</label>
+        <textarea
+          id="description"
+          value={description}
+          onChange={(e) => setDescription(e.target.value)}
+        />
+      </div>
+      <div>
+        <label htmlFor="editorId">Editor ID:</label>
+        <input
+          type="text"
+          id="editorId"
+          value={editorId}
+          onChange={(e) => setEditorId(e.target.value)}
+        />
+      </div>
+      <button type="submit">Upload Video</button>
+      {errorMessage && <div>{errorMessage}</div>}
+    </form>
   );
 };
 
