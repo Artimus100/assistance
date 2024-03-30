@@ -92,7 +92,7 @@ const loginEditor = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
 exports.loginEditor = loginEditor;
 const uploadVideo = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
-        const { workspaceId } = req.params;
+        const { workspaceId, editorId } = req.params;
         const s3 = new aws_sdk_1.default.S3({
             accessKeyId: process.env.AWS_ACCESS_KEY_ID,
             secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
@@ -116,7 +116,7 @@ const uploadVideo = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
             }
             const { title, description, editorId } = req.body;
             // Generate a unique key for the file in S3
-            const key = `videos/${workspaceId}/${(0, uuid_1.v4)()}-${req.file.originalname}`;
+            const key = `videos/${(0, uuid_1.v4)()}-${req.file.originalname}`;
             // Upload file to AWS S3 bucket
             const params = {
                 Bucket: process.env.AWS_S3_BUCKET_NAME,

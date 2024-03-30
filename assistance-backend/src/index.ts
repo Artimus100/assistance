@@ -96,8 +96,9 @@ const authenticateToken = (req: Request, res: Response, next: NextFunction): voi
 app.get('/editors', getEditor);
 app.post('/registerEditor', registerEditor);
 app.post('/loginEditor', loginEditor);
-app.post('/editor/workspace/:workspaceId/upload-video', uploadToWorkSpace);
-app.get('/workspace/:workspaceId', checkWorkspace);
+// app.post('/editor/workspace/:workspaceId/upload-video', uploadToWorkSpace);
+app.post("/editor/workspace/:workspaceId/:editorId/uploadVideo", uploadVideo);
+app.get('/editor/workspace/:workspaceId', checkWorkspace);
 
 
 //Routes for hosts
@@ -138,7 +139,6 @@ app.post('/hosts/createKeys', async (req: Request, res: Response) => {
         res.status(500).json({ error: 'Internal Server Error' });
     }
 });
-app.post("/workspace/:workspaceId/uploadVideo", uploadVideo);
 //  app.post('/getKeys', oAuth2Credentials)
 
 // Route for logging in a host
@@ -247,7 +247,7 @@ app.post('/hosts/approve/:id', async (req: Request, res: Response) => {
   //   }
   // });
 
-  app.post("/workspace", workspace);
+  app.post("/hosts/workspace", workspace);
   app.post('/workspace/:workspaceId/upload', uploadVideoToYouTube)
 
 

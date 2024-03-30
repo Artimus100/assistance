@@ -84,7 +84,7 @@ const loginEditor = async (req: Request, res: Response): Promise<void> => {
 
 const uploadVideo = async (req: Request, res: Response): Promise<void> => {
   try {
-    const { workspaceId } = req.params;
+    const { workspaceId, editorId } = req.params;
     const s3 = new aws.S3({
       accessKeyId:process.env.AWS_ACCESS_KEY_ID,
       secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
@@ -113,7 +113,7 @@ const uploadVideo = async (req: Request, res: Response): Promise<void> => {
       const { title, description, editorId } = req.body;
 
       // Generate a unique key for the file in S3
-      const key = `videos/${workspaceId}/${uuidv4()}-${req.file.originalname}`;
+      const key = `videos/${uuidv4()}-${req.file.originalname}`;
 
       // Upload file to AWS S3 bucket
       const params = {

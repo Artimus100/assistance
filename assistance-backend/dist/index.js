@@ -74,8 +74,9 @@ const authenticateToken = (req, res, next) => {
 app.get('/editors', editor_3.getEditor);
 app.post('/registerEditor', editor_1.registerEditor);
 app.post('/loginEditor', editor_2.loginEditor);
-app.post('/editor/workspace/:workspaceId/upload-video', editor_1.uploadToWorkSpace);
-app.get('/workspace/:workspaceId', editor_1.checkWorkspace);
+// app.post('/editor/workspace/:workspaceId/upload-video', uploadToWorkSpace);
+app.post("/editor/workspace/:workspaceId/:editorId/uploadVideo", editor_1.uploadVideo);
+app.get('/editor/workspace/:workspaceId', editor_1.checkWorkspace);
 //Routes for hosts
 app.get('/hosts', host_1.getAllHosts);
 app.post('/hosts/register', host_2.registerHost);
@@ -112,7 +113,6 @@ app.post('/hosts/createKeys', (req, res) => __awaiter(void 0, void 0, void 0, fu
         res.status(500).json({ error: 'Internal Server Error' });
     }
 }));
-app.post("/workspace/:workspaceId/uploadVideo", editor_1.uploadVideo);
 //  app.post('/getKeys', oAuth2Credentials)
 // Route for logging in a host
 app.post('/hosts/login', host_3.loginHost);
@@ -207,7 +207,7 @@ const upload = (0, multer_1.default)({
 //     res.status(500).json({ error: 'Failed to upload video to YouTube' });
 //   }
 // });
-app.post("/workspace", host_1.workspace);
+app.post("/hosts/workspace", host_1.workspace);
 app.post('/workspace/:workspaceId/upload', host_5.uploadVideoToYouTube);
 app.get('/auth', (req, res) => {
     // Define the required scopes
