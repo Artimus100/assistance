@@ -23,7 +23,7 @@ const UploadVideoForm: React.FC = () => {
     formData.append('editorId', editorId);
 
     try {
-      await axios.post('http://localhost:3000/workspace/:workspaceId/uploadVideo', formData, {
+      await axios.post('http://localhost:3000/editor/workspace/:workspaceId/:editorId/uploadVideo', formData, {
         headers: {
           'Content-Type': 'multipart/form-data'
         }

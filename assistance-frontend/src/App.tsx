@@ -22,7 +22,7 @@ const App: React.FC = () => {
         {/* <Route path="/oAuth" element={<OAuth2CallbackPage />} /> */}
          <Route path="/auth" element={<AuthButton />} /> 
         <Route path="/creatorDashbord" element={<CreatorDashboard />} />
-         <Route path="/workspace/:workspaceId/uploadVideo" element={<UploadVideoForm />} /> 
+         <Route path="/editor/workspace/:workspaceId/:editorId/uploadVideo" element={<UploadVideoForm />} /> 
 
         {/* <Route path="/upload" element={<UploadForm/>}/> */}
         <Route path="/hostWorkspace" element={<WorkspaceForm/>}/>

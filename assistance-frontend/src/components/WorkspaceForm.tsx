@@ -14,7 +14,7 @@ const WorkspaceForm: React.FC = () => {
       const parsedHostId = parseInt(hostId.toString(), 10);
       const parsedEditorId = parseInt(editorId.toString(), 10);
 
-      await axios.post('http://localhost:3000/workspace', { hostId: parsedHostId, editorId: parsedEditorId });
+      await axios.post('http://localhost:3000/hosts/workspace', { hostId: parsedHostId, editorId: parsedEditorId });
       setSuccessMessage('Workspace created successfully');
     } catch (error) {
       if (axios.isAxiosError(error) && error.response?.data?.error) {
