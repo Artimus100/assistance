@@ -80,6 +80,7 @@ app.get('/editor/workspace/:workspaceId', editor_1.checkWorkspace);
 //Routes for hosts
 app.get('/hosts', host_1.getAllHosts);
 app.post('/hosts/register', host_2.registerHost);
+app.get('/hosts/workspaces/:hostUsername', host_1.getAllWorkspaces);
 app.get('/hosts/Dashboard', authenticateToken, (req, res) => {
     try {
         // Access the authenticated user role from req.userRole
@@ -237,6 +238,7 @@ app.get('/callback', (req, res) => __awaiter(void 0, void 0, void 0, function* (
         res.status(500).json({ error: 'Failed to exchange authorization code for tokens' });
     }
 }));
+app.get("/streamVideo/:key", host_1.streamVideo);
 function exchangeAuthorizationCode(authorizationCode) {
     return __awaiter(this, void 0, void 0, function* () {
         // Make a request to the authorization server's token endpoint to exchange the code for tokens

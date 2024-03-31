@@ -5,6 +5,8 @@ import jwt from 'jsonwebtoken';
 import bcrypt from 'bcrypt';
 import { google } from 'googleapis';
 import { S3 } from 'aws-sdk';
+import aws from 'aws-sdk';
+
 
 
 
@@ -298,48 +300,51 @@ const uploadVideoToYouTube = async (videoKey:string, metadata:any) => {
       throw error;
   }
 };
-  const workspace = async (req:Request, res:Response): Promise<any>=>{
+const workspace = async (req: Request, res: Response): Promise<any> => {
     try {
-      
-      const { hostId, editorId } = req.body;
-      const parsedHostId = parseInt(hostId, 10);
-        const parsedEditorId = parseInt(editorId, 10)
+        const { hostId, editorId, name } = req.body;
 
-      // Check if host exists
-      const host = await prisma.host.findUnique({
-        where: {
-            id: parsedHostId,
-        },
-    });
-      if (!host) {
-        return res.status(404).json({ error: 'Host not found' });
-      }
-      const EditorId = parseInt(req.body.editorId, 10);
+        // Parse hostId and editorId to integers
+        const parsedHostId = parseInt(hostId, 10);
+        const parsedEditorId = parseInt(editorId, 10);
 
-      // Check if editor exists
-      const editor = await prisma.editor.findUnique({
-        where: {
-            id: parsedEditorId,
-        },
-    });
-      if (!editor) {
-        return res.status(404).json({ error: 'Editor not found' });
-      }
-      res.locals.editorId = editorId;//stores the editor id in locals
-      // Create workspace
-      const workspace = await prisma.workspace.create({
-        data: {
-          host: { connect: { id: hostId } },
-          editor: { connect: { id: editorId } }
+        // Check if host exists
+        const host = await prisma.host.findUnique({
+            where: {
+                id: parsedHostId,
+            },
+        });
+
+        if (!host) {
+            return res.status(404).json({ error: 'Host not found' });
         }
-      });
-  
-      res.json(workspace);
+
+        // Check if editor exists
+        const editor = await prisma.editor.findUnique({
+            where: {
+                id: parsedEditorId,
+            },
+        });
+
+        if (!editor) {
+            return res.status(404).json({ error: 'Editor not found' });
+        }
+
+        // Create workspace
+        const workspace = await prisma.workspace.create({
+            data: {
+                host: { connect: { id: parsedHostId } },
+                editor: { connect: { id: parsedEditorId } },
+                name: name,
+            }
+        });
+
+        res.json(workspace);
     } catch (error) {
-      console.error('Error creating workspace:', error);
-      res.status(500).json({ error: 'Failed to create workspace' });
+        console.error('Error creating workspace:', error);
+        res.status(500).json({ error: 'Failed to create workspace' });
     }
-  };
+};
 
 // Function to generate JWT token for the host
 const secretKey = 'rahul';
@@ -397,8 +402,66 @@ const secretKey = 'rahul';
 //   });
 // };
 
+const getAllWorkspaces = async (req: Request, res: Response): Promise<void> => {
+  try {
+      const { hostUsername } = req.params;
+
+      // Find the host by username
+      const host = await prisma.host.findUnique({
+          where: {
+              username: hostUsername,
+          },
+          include: {
+              workspaces: true,
+          },
+      });
+
+      if (!host) {
+          res.status(404).json({ error: 'Host not found' });
+          return;
+      }
+
+      // Extract the workspaces from the host
+      const workspaces = host.workspaces;
+
+      res.status(200).json(workspaces);
+  } catch (err) {
+      console.error('Error fetching workspaces by host:', err);
+      res.status(500).json({ error: 'Internal Server Error' });
+  }
+};
+
+// Configure AWS SDK
+const s3 = new aws.S3({
+  accessKeyId: process.env.AWS_ACCESS_KEY_ID,
+  secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
+});
+
+// Function to stream video from S3 bucket
+const streamVideo = async (req: Request, res: Response): Promise<void> => {
+  try {
+    // Get the video key from request parameters
+    const { key } = req.params;
+
+    // Create a read stream from the S3 object
+    const s3Stream = s3.getObject({
+      Bucket: process.env.AWS_S3_BUCKET_NAME!,
+      Key: key,
+    }).createReadStream();
+
+    // Set content type as video/mp4 (modify according to your video format)
+    res.setHeader('Content-Type', 'video/mp4');
+
+    // Pipe the read stream to response
+    s3Stream.pipe(res);
+  } catch (error) {
+    console.error('Error streaming video:', error);
+    res.status(500).json({ error: 'Failed to stream video' });
+  }
+};
+
 
   
 
 
-export {getAllHosts, registerHost, loginHost, createKey, uploadVideoToYouTube, initiateOAuth2Authorization, handleOAuth2Callback, workspace,generateToken}
+export {getAllHosts, registerHost, loginHost, createKey, uploadVideoToYouTube, initiateOAuth2Authorization, handleOAuth2Callback, workspace,generateToken, streamVideo, getAllWorkspaces}

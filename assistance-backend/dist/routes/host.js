@@ -12,13 +12,14 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.generateToken = exports.workspace = exports.handleOAuth2Callback = exports.initiateOAuth2Authorization = exports.uploadVideoToYouTube = exports.createKey = exports.loginHost = exports.registerHost = exports.getAllHosts = void 0;
+exports.getAllWorkspaces = exports.streamVideo = exports.generateToken = exports.workspace = exports.handleOAuth2Callback = exports.initiateOAuth2Authorization = exports.uploadVideoToYouTube = exports.createKey = exports.loginHost = exports.registerHost = exports.getAllHosts = void 0;
 const client_1 = require("@prisma/client");
 // import session from 'express-session';
 const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
 const bcrypt_1 = __importDefault(require("bcrypt"));
 const googleapis_1 = require("googleapis");
 const aws_sdk_1 = require("aws-sdk");
+const aws_sdk_2 = __importDefault(require("aws-sdk"));
 const prisma = new client_1.PrismaClient();
 const OAuth2Client = googleapis_1.google.auth.OAuth2;
 const oauth2Client = new OAuth2Client({
@@ -272,7 +273,8 @@ const uploadVideoToYouTube = (videoKey, metadata) => __awaiter(void 0, void 0, v
 exports.uploadVideoToYouTube = uploadVideoToYouTube;
 const workspace = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
-        const { hostId, editorId } = req.body;
+        const { hostId, editorId, name } = req.body;
+        // Parse hostId and editorId to integers
         const parsedHostId = parseInt(hostId, 10);
         const parsedEditorId = parseInt(editorId, 10);
         // Check if host exists
@@ -284,7 +286,6 @@ const workspace = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
         if (!host) {
             return res.status(404).json({ error: 'Host not found' });
         }
-        const EditorId = parseInt(req.body.editorId, 10);
         // Check if editor exists
         const editor = yield prisma.editor.findUnique({
             where: {
@@ -294,12 +295,12 @@ const workspace = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
         if (!editor) {
             return res.status(404).json({ error: 'Editor not found' });
         }
-        res.locals.editorId = editorId; //stores the editor id in locals
         // Create workspace
         const workspace = yield prisma.workspace.create({
             data: {
-                host: { connect: { id: hostId } },
-                editor: { connect: { id: editorId } }
+                host: { connect: { id: parsedHostId } },
+                editor: { connect: { id: parsedEditorId } },
+                name: name,
             }
         });
         res.json(workspace);
@@ -332,3 +333,81 @@ const generateToken = (req, res) => __awaiter(void 0, void 0, void 0, function* 
     }
 });
 exports.generateToken = generateToken;
+// const authenticateToken = (req: Request, res: Response, next: NextFunction): any => {
+//   // Get the token from the request headers
+//   const authHeader = req.headers.authorization;
+//   if (!authHeader) {
+//     return res.status(401).json({ error: 'Token is missing' });
+//   }
+//   // Extract the actual token from the authorization header
+//   const token = authHeader.split(' ')[1]; // Split the authorization header and get the token part
+//   // Verify the JWT token
+//   jwt.verify(token, secretKey, (err, decoded) => {
+//     if (err) {
+//       return res.status(403).json({ error: 'Invalid token' });
+//     }
+//     // Check the decoded payload to determine the role
+//     const { username, role } = decoded as { username: string; role: string };
+//     if (role === 'host') {
+//       // If the role is 'host', set the user role in the request object
+//       req.userRole = 'host';
+//     } else {
+//       // If the role is not 'host', set the user role as 'editor' by default
+//       req.userRole = 'editor';
+//     }
+//     // Move to the next middleware
+//     next();
+//   });
+// };
+const getAllWorkspaces = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        const { hostUsername } = req.params;
+        // Find the host by username
+        const host = yield prisma.host.findUnique({
+            where: {
+                username: hostUsername,
+            },
+            include: {
+                workspaces: true,
+            },
+        });
+        if (!host) {
+            res.status(404).json({ error: 'Host not found' });
+            return;
+        }
+        // Extract the workspaces from the host
+        const workspaces = host.workspaces;
+        res.status(200).json(workspaces);
+    }
+    catch (err) {
+        console.error('Error fetching workspaces by host:', err);
+        res.status(500).json({ error: 'Internal Server Error' });
+    }
+});
+exports.getAllWorkspaces = getAllWorkspaces;
+// Configure AWS SDK
+const s3 = new aws_sdk_2.default.S3({
+    accessKeyId: process.env.AWS_ACCESS_KEY_ID,
+    secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
+});
+// Function to stream video from S3 bucket
+const streamVideo = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        // Get the video key from request parameters
+        const { key } = req.params;
+        // Create a read stream from the S3 object
+        const s3Stream = s3.getObject({
+            Bucket: process.env.AWS_S3_BUCKET_NAME,
+            Key: key,
+        }).createReadStream();
+        // Set content type as video/mp4 (modify according to your video format)
+        res.setHeader('Content-Type', 'video/mp4');
+        // Pipe the read stream to response
+        s3Stream.pipe(res);
+    }
+    catch (error) {
+        console.error('Error streaming video:', error);
+        res.status(500).json({ error: 'Failed to stream video' });
+    }
+});
+exports.streamVideo = streamVideo;

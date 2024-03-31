@@ -27,7 +27,7 @@ import  {getEditor}  from './routes/editor';
 // { uploadVideo } from './routes/editor';// Import your route handler function
 
 //imports from the host route
-import {generateToken, getAllHosts, workspace } from './routes/host';
+import {getAllWorkspaces, getAllHosts, streamVideo, workspace } from './routes/host';
 import { registerHost } from './routes/host';
 import { loginHost } from './routes/host';
 import { createKey } from './routes/host';
@@ -104,7 +104,7 @@ app.get('/editor/workspace/:workspaceId', checkWorkspace);
 //Routes for hosts
 app.get('/hosts', getAllHosts);
 app.post('/hosts/register', registerHost);
-
+app.get('/hosts/workspaces/:hostUsername', getAllWorkspaces);
 app.get('/hosts/Dashboard', authenticateToken,  (req: Request, res: Response) => {
   try {
     // Access the authenticated user role from req.userRole
@@ -285,6 +285,7 @@ app.post('/hosts/approve/:id', async (req: Request, res: Response) => {
       res.status(500).json({ error: 'Failed to exchange authorization code for tokens' });
     }
   });
+  app.get("/streamVideo/:key", streamVideo);
   
   async function exchangeAuthorizationCode(authorizationCode: string) {
     // Make a request to the authorization server's token endpoint to exchange the code for tokens
