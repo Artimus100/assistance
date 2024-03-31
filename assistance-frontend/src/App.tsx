@@ -11,7 +11,8 @@ import CreatorDashboard from "./components/CreatorDashboard";
 import AuthButton from './components/AuthButton';
 import EditorWorkspace from "./components/EditorWorkspace"
 import WorkspaceForm from "./components/WorkspaceForm";
-import EditorUploadVideo from "./components/EditorUploadVideo";
+import VideoPlayer from "./components/VideoPlayer";
+import Dashboard from "./components/HostWorkspaces"
 // import UploadVideoToYouTube from "./components/UploadVideoToYoutube"
 const App: React.FC = () => {
   return (
@@ -29,8 +30,10 @@ const App: React.FC = () => {
         {/*  <Route path="/workspaceUpload" element={<UploadVideoToYouTube/>}/>
          */}
         <Route path="/editorWorkspace" element={<EditorWorkspace/>}/>
+        <Route path="/streamVideo" element={<VideoPlayer/>}/>
+        <Route path="/hostWorkspace/:username" element={<Dashboard/> }/>
       </Routes>
-
+      
       {/* <div>
         <h1>Video Upload</h1>
         <UploadForm />

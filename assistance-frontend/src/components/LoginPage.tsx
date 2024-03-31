@@ -12,7 +12,7 @@ const LoginPage: React.FC = () => {
         window.location.href = '/host';
       } else if (role === 'editor') {
         // Redirect to editor page
-        window.location.href = '/editor';
+        window.location.href = '/editorWorkspace';
       } else {
         setError('User not found');
       }
