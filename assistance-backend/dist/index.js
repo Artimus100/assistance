@@ -75,12 +75,13 @@ app.get('/editors', editor_3.getEditor);
 app.post('/registerEditor', editor_1.registerEditor);
 app.post('/loginEditor', editor_2.loginEditor);
 // app.post('/editor/workspace/:workspaceId/upload-video', uploadToWorkSpace);
-app.post("/editor/workspace/:workspaceId/:editorId/uploadVideo", editor_1.uploadVideo);
+app.post("/workspace/:workspaceId/:editorId/uploadVideo", editor_1.uploadVideo);
 app.get('/editor/workspace/:workspaceId', editor_1.checkWorkspace);
 //Routes for hosts
 app.get('/hosts', host_1.getAllHosts);
 app.post('/hosts/register', host_2.registerHost);
 app.get('/hosts/workspaces/:hostUsername', host_1.getAllWorkspaces);
+app.get("hosts/workspaces/:hostUsername/:workspaceId", host_1.hostEnterWorkspace);
 app.get('/hosts/Dashboard', authenticateToken, (req, res) => {
     try {
         // Access the authenticated user role from req.userRole

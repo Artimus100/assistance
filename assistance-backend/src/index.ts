@@ -21,13 +21,13 @@ const cors = require("cors");
 
 // import {hostRouter} from './routes/host';
 // import editorRouter from './routes/editor';
-import { registerEditor, uploadToWorkSpace, uploadVideo, checkWorkspace } from './routes/editor';
+import { registerEditor, uploadVideo, checkWorkspace } from './routes/editor';
 import { loginEditor } from './routes/editor';
 import  {getEditor}  from './routes/editor';
 // { uploadVideo } from './routes/editor';// Import your route handler function
 
 //imports from the host route
-import {getAllWorkspaces, getAllHosts, streamVideo, workspace } from './routes/host';
+import {getAllWorkspaces, getAllHosts, streamVideo, workspace,hostEnterWorkspace } from './routes/host';
 import { registerHost } from './routes/host';
 import { loginHost } from './routes/host';
 import { createKey } from './routes/host';
@@ -97,7 +97,7 @@ app.get('/editors', getEditor);
 app.post('/registerEditor', registerEditor);
 app.post('/loginEditor', loginEditor);
 // app.post('/editor/workspace/:workspaceId/upload-video', uploadToWorkSpace);
-app.post("/editor/workspace/:workspaceId/:editorId/uploadVideo", uploadVideo);
+app.post("/workspace/:workspaceId/:editorId/uploadVideo", uploadVideo);
 app.get('/editor/workspace/:workspaceId', checkWorkspace);
 
 
@@ -105,6 +105,7 @@ app.get('/editor/workspace/:workspaceId', checkWorkspace);
 app.get('/hosts', getAllHosts);
 app.post('/hosts/register', registerHost);
 app.get('/hosts/workspaces/:hostUsername', getAllWorkspaces);
+app.get("hosts/workspaces/:hostUsername/:workspaceId", hostEnterWorkspace);
 app.get('/hosts/Dashboard', authenticateToken,  (req: Request, res: Response) => {
   try {
     // Access the authenticated user role from req.userRole

@@ -12,7 +12,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getAllWorkspaces = exports.streamVideo = exports.generateToken = exports.workspace = exports.handleOAuth2Callback = exports.initiateOAuth2Authorization = exports.uploadVideoToYouTube = exports.createKey = exports.loginHost = exports.registerHost = exports.getAllHosts = void 0;
+exports.hostEnterWorkspace = exports.getAllWorkspaces = exports.streamVideo = exports.generateToken = exports.workspace = exports.handleOAuth2Callback = exports.initiateOAuth2Authorization = exports.uploadVideoToYouTube = exports.createKey = exports.loginHost = exports.registerHost = exports.getAllHosts = void 0;
 const client_1 = require("@prisma/client");
 // import session from 'express-session';
 const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
@@ -411,3 +411,6 @@ const streamVideo = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
     }
 });
 exports.streamVideo = streamVideo;
+const hostEnterWorkspace = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+});
+exports.hostEnterWorkspace = hostEnterWorkspace;

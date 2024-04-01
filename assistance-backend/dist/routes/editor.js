@@ -12,7 +12,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.checkWorkspace = exports.uploadVideo = exports.uploadToWorkSpace = exports.loginEditor = exports.getEditor = exports.registerEditor = void 0;
+exports.checkWorkspace = exports.uploadVideo = exports.loginEditor = exports.getEditor = exports.registerEditor = void 0;
 const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
 const bcrypt_1 = __importDefault(require("bcrypt"));
 const multer_1 = __importDefault(require("multer"));
@@ -92,7 +92,16 @@ const loginEditor = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
 exports.loginEditor = loginEditor;
 const uploadVideo = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
-        const { workspaceId, editorId } = req.params;
+        const workspaceId = parseInt(req.params.workspaceId); // Parse workspaceId as an integer
+        if (isNaN(workspaceId)) {
+            res.status(400).json({ error: 'Invalid workspaceId' });
+            return;
+        }
+        // const editorId = parseInt(req.params.editorId); // Parse editorId as an integer
+        // if (isNaN(editorId)) {
+        //   res.status(400).json({ error: 'Invalid editorId' });
+        //   return 
+        //}
         const s3 = new aws_sdk_1.default.S3({
             accessKeyId: process.env.AWS_ACCESS_KEY_ID,
             secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
@@ -132,8 +141,10 @@ const uploadVideo = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
                     videoFile: key,
                     status: "PENDING", // Store the S3 key in the database
                     editorId: parseInt(editorId),
+                    workspaceId: workspaceId, // Associate content with the specified workspace
                 },
             });
+            console.log(key);
             res.status(201).json({ message: 'Video uploaded successfully', content: uploadedContent });
         }));
     }
@@ -143,76 +154,71 @@ const uploadVideo = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
     }
 });
 exports.uploadVideo = uploadVideo;
-const uploadToWorkSpace = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    try {
-        const { workspaceId } = req.params;
-        const { videoTitle, videoDescription, editorId } = req.body;
-        const s3 = new aws_sdk_1.default.S3({
-            accessKeyId: process.env.AWS_ACCESS_KEY_ID,
-            secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
-        });
-        // Set the editor ID in res.locals
-        res.locals.editorId = editorId;
-        // Check if workspace exists
-        const workspace = yield prisma.workspace.findUnique({
-            where: { id: parseInt(workspaceId) },
-            include: { host: true }
-        });
-        if (!workspace) {
-            return res.status(404).json({ error: 'Workspace not found' });
-        }
-        // Check if editor is authorized to upload in this workspace
-        // For simplicity, you can check if the editor ID matches the one associated with the workspace
-        // Retrieve the editorId from res.locals
-        if (workspace.editorId !== editorId) {
-            return res.status(403).json({ error: 'Unauthorized' });
-        }
-        // Create a multer instance for handling file uploads
-        const upload = (0, multer_1.default)({
-            storage: multer_1.default.memoryStorage(), // Store files in memory before uploading to S3
-            limits: {
-                fileSize: 2 * 1024 * 1024 * 1024, // Maximum file size (2GB)
-            },
-        }).single('video'); // Specify the field name for the uploaded file
-        // Handle file upload using multer
-        upload(req, res, (err) => __awaiter(void 0, void 0, void 0, function* () {
-            if (err) {
-                console.error('Error uploading file:', err);
-                return res.status(500).json({ error: 'Failed to upload file' });
-            }
-            // Check if req.file exists
-            if (!req.file) {
-                return res.status(400).json({ error: 'No file uploaded' });
-            }
-            // Generate a unique key for the file in S3
-            const key = `videos/${(0, uuid_1.v4)()}-${req.file.originalname}`;
-            // Upload file to AWS S3 bucket
-            const params = {
-                Bucket: process.env.AWS_S3_BUCKET_NAME,
-                Key: key,
-                Body: req.file.buffer,
-            };
-            yield s3.upload(params).promise();
-            // Save the uploaded file details to the database
-            const uploadedContent = yield prisma.content.create({
-                data: {
-                    title: videoTitle,
-                    description: videoDescription,
-                    videoFile: key,
-                    status: 'PENDING', // Store the S3 key in the database
-                    editor: { connect: { id: editorId } }, // Connect the editor using the fetched editorId
-                    workspace: { connect: { id: parseInt(workspaceId) } },
-                },
-            });
-            res.status(201).json({ message: 'Video uploaded successfully', content: uploadedContent });
-        }));
-    }
-    catch (error) {
-        console.error('Error uploading video:', error);
-        res.status(500).json({ error: 'Failed to upload video' });
-    }
-});
-exports.uploadToWorkSpace = uploadToWorkSpace;
+// const uploadToWorkSpace = async (req: Request, res: Response) => {
+//   try {
+//     const  {workspaceId }  = req.params;
+//     const {editorId}  = req.params;
+//     const { videoTitle, videoDescription} = req.body;
+//     const s3 = new aws.S3({
+//      accessKeyId:process.env.AWS_ACCESS_KEY_ID,
+//      secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
+//     });
+//     // Set the editor ID in res.locals
+//     // Check if workspace exists
+//     const workspace = await prisma.workspace.findUnique({
+//       where: { id: parseInt(workspaceId)} ,
+//       include: { host: true }
+//     });
+//     if (!workspace) {
+//       return res.status(404).json({ error: 'Workspace not found' });
+//     }
+//     // Check if editor is authorized to upload in this workspace
+//     // For simplicity, you can check if the editor ID matches the one associated with the workspace
+//      // Retrieve the editorId from res.locals
+//     // Create a multer instance for handling file uploads
+//     const upload = multer({
+//       storage: multer.memoryStorage(), // Store files in memory before uploading to S3
+//       limits: {
+//         fileSize:   1024 * 1024 * 1024, // Maximum file size (2GB)
+//       },
+//     }).single('video'); // Specify the field name for the uploaded file
+//     // Handle file upload using multer
+//     upload(req, res, async (err: any) => {
+//       if (err) {
+//         console.error('Error uploading file:', err);
+//         return res.status(500).json({ error: 'Failed to upload file' });
+//       }
+//       // Check if req.file exists
+//       if (!req.file) {
+//         return res.status(400).json({ error: 'No file uploaded' });
+//       }
+//       // Generate a unique key for the file in S3
+//       const key = `videos/${uuidv4()}-${req.file.originalname}`;
+//       // Upload file to AWS S3 bucket
+//       const params = {
+//         Bucket: process.env.AWS_S3_BUCKET_NAME!,
+//         Key: key,
+//         Body: req.file.buffer,
+//       };
+//       await s3.upload(params).promise();
+//       // Save the uploaded file details to the database
+//       const uploadedContent = await prisma.content.create({
+//         data: {
+//           title: videoTitle,
+//           description: videoDescription,
+//           videoFile: key,
+//           status: 'PENDING', // Store the S3 key in the database
+//           editor: { connect: { id: editorId } }, // Connect the editor using the fetched editorId
+//           workspace: { connect: { id: parseInt(workspaceId) } },
+//         },
+//       });
+//       res.status(201).json({ message: 'Video uploaded successfully', content: uploadedContent });
+//     });
+//   } catch (error) {
+//     console.error('Error uploading video:', error);
+//     res.status(500).json({ error: 'Failed to upload video' });
+//   }
+// };
 const checkWorkspace = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         // Extract workspaceId from request parameters

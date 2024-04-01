@@ -335,7 +335,7 @@ const workspace = async (req: Request, res: Response): Promise<any> => {
             data: {
                 host: { connect: { id: parsedHostId } },
                 editor: { connect: { id: parsedEditorId } },
-                name: name,
+                name:name,
             }
         });
 
@@ -459,9 +459,10 @@ const streamVideo = async (req: Request, res: Response): Promise<void> => {
     res.status(500).json({ error: 'Failed to stream video' });
   }
 };
-
+const hostEnterWorkspace = async (req: Request, res: Response): Promise<void> => {
+}
 
   
 
 
-export {getAllHosts, registerHost, loginHost, createKey, uploadVideoToYouTube, initiateOAuth2Authorization, handleOAuth2Callback, workspace,generateToken, streamVideo, getAllWorkspaces}
+export {getAllHosts, registerHost, loginHost, createKey, uploadVideoToYouTube, initiateOAuth2Authorization, handleOAuth2Callback, workspace,generateToken, streamVideo, getAllWorkspaces,hostEnterWorkspace}

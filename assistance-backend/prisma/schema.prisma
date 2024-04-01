@@ -36,27 +36,28 @@ model oauth2credential {
 }
 
 model Content {
-  id          Int         @id @default(autoincrement())
+  id          Int       @id @default(autoincrement())
   title       String
   description String
   videoFile   String
   status      VideoStatus
   editorId    Int
-  uploadDate  DateTime    @default(now())
-  workspaceId Int         @default(1)
-  editor      editor      @relation(fields: [editorId], references: [id])
-  workspace   Workspace   @relation("WorkspaceVideos", fields: [workspaceId], references: [id])
+  uploadDate  DateTime  @default(now())
+  editor      editor    @relation(fields: [editorId], references: [id])
+  workspace   Workspace @relation( "workspaceContents" ,fields: [workspaceId], references: [id])
+  workspaceId Int
 }
 
 model Workspace {
-  name     String
   id       Int       @id @default(autoincrement())
+  name     String    
   hostId   Int
   editorId Int
-  content  Content[] @relation("WorkspaceVideos")
+  contents Content[] @relation("workspaceContents")
   editor   editor    @relation(fields: [editorId], references: [id])
   host     host      @relation(fields: [hostId], references: [id])
 }
+
 
 enum VideoStatus {
   PENDING
