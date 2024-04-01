@@ -21,7 +21,7 @@ const EditorWorkspace: React.FC = () => {
             const response = await axios.get(`http://localhost:3000/editor/workspace/${workspaceId}`);
             if (response.status === 200) {
                 // Workspace ID is valid, navigate to uploadVideo page with workspaceId and editorId in the URL
-                navigate(`/editor/workspace/${workspaceId}/${editorId}/uploadVideo`, { state: { editorId } });
+                navigate(`/workspace/${workspaceId}/uploadVideo`);
             } else {
                 console.error('Workspace not found');
                 // Handle workspace not found error

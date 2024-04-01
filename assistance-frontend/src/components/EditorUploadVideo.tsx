@@ -38,7 +38,7 @@ const UploadVideoForm: React.FC = () => {
     });
 
     try {
-      const response = await axios.post('/editor/workspace/workspaceId/uploadVideo', formData, {
+      const response = await axios.post('/editor/workspace/:workspaceId/:editorId/uploadVideo', formData, {
         headers: {
           'Content-Type': 'multipart/form-data',
         },

@@ -1,9 +1,14 @@
 import React, { useEffect, useRef } from 'react';
 import axios from 'axios';
+import PropTypes from 'prop-types';
 
-interface VideoProps {
+type VideoProps = {
   videoKey: string; // The key of the video in the S3 bucket
 }
+// Define prop types for VideoPlayer component
+
+
+
 
 const VideoPlayer: React.FC<VideoProps> = ({ videoKey }) => {
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -27,7 +32,9 @@ const VideoPlayer: React.FC<VideoProps> = ({ videoKey }) => {
         console.error('Error fetching video:', error);
       }
     };
-
+    VideoPlayer.propTypes = {
+      videoKey: PropTypes.string.isRequired,
+    };
     fetchVideo();
 
     // Clean up when component unmounts

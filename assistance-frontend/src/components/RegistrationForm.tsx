@@ -97,7 +97,7 @@ function Signup() {
             });
             const data = response.data;
             localStorage.setItem('token', data.token);
-            window.location.href = 'http://localhost:5173/workspace'; // Redirect to workspace
+            window.location.href = 'http://localhost:5173/hostWorkspace'; // Redirect to workspace
         } catch (error) {
             console.error('Signup failed:', error);
             // Handle signup error
