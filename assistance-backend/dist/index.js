@@ -100,6 +100,16 @@ app.get('/hosts/Dashboard', authenticateToken, (req, res) => {
         res.status(500).json({ error: 'Internal Server Error' });
     }
 });
+app.get('/getAllvideoKeys', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        const videoKeys = yield (0, host_1.getAllVideoKeys)();
+        res.status(200).json({ videoKeys });
+    }
+    catch (error) {
+        console.error('Error fetching video keys:', error);
+        res.status(500).json({ error: 'Failed to fetch video keys' });
+    }
+}));
 app.post('/hosts/createKeys', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         // Assuming hostId is sent in the request body

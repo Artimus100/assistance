@@ -147,8 +147,7 @@ const uploadVideo = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
                 },
             });
             console.log(key);
-            // console.log(fileName);
-            res.status(201).json({ message: 'Video uploaded successfully', content: uploadedContent });
+            res.status(201).json({ message: 'Video uploaded successfully', content: uploadedContent, key: key });
             return key;
         }));
     }

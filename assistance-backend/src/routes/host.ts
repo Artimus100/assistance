@@ -461,8 +461,12 @@ const streamVideo = async (req: Request, res: Response): Promise<void> => {
 };
 const hostEnterWorkspace = async (req: Request, res: Response): Promise<void> => {
 }
+async function getAllVideoKeys(): Promise<{ id: number; videoFile: string }[]> {
+  const contents = await prisma.content.findMany();
+  return contents.map(content =>({id:content.id,videoFile:content.videoFile}) );
+}
 
   
 
 
-export {getAllHosts, registerHost, loginHost, createKey, uploadVideoToYouTube, initiateOAuth2Authorization, handleOAuth2Callback, workspace,generateToken, streamVideo, getAllWorkspaces,hostEnterWorkspace}
+export {getAllHosts, registerHost, loginHost, createKey, uploadVideoToYouTube, initiateOAuth2Authorization, handleOAuth2Callback, workspace,generateToken, streamVideo, getAllWorkspaces,hostEnterWorkspace,getAllVideoKeys}

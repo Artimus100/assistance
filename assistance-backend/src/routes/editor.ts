@@ -151,8 +151,7 @@ const uploadVideo = async (req: Request, res: Response): Promise<void> => {
       });
 
       console.log(key);
-      // console.log(fileName);
-      res.status(201).json({ message: 'Video uploaded successfully', content: uploadedContent });
+      res.status(201).json({ message: 'Video uploaded successfully', content: uploadedContent ,key: key});
       return key;
     });
   } catch (error) {

@@ -27,7 +27,7 @@ import  {getEditor}  from './routes/editor';
 // { uploadVideo } from './routes/editor';// Import your route handler function
 
 //imports from the host route
-import {getAllWorkspaces, getAllHosts, streamVideo, workspace,hostEnterWorkspace } from './routes/host';
+import {getAllWorkspaces,getAllVideoKeys, getAllHosts, streamVideo, workspace,hostEnterWorkspace } from './routes/host';
 import { registerHost } from './routes/host';
 import { loginHost } from './routes/host';
 import { createKey } from './routes/host';
@@ -123,6 +123,15 @@ app.get('/hosts/Dashboard', authenticateToken,  (req: Request, res: Response) =>
     res.status(500).json({ error: 'Internal Server Error' });
   }
 })
+app.get('/getAllvideoKeys', async (req: Request, res: Response) => {
+  try {
+    const videoKeys = await getAllVideoKeys();
+    res.status(200).json({ videoKeys });
+  } catch (error) {
+    console.error('Error fetching video keys:', error);
+    res.status(500).json({ error: 'Failed to fetch video keys' });
+  }
+});
 
 app.post('/hosts/createKeys', async (req: Request, res: Response) => {
     try {
