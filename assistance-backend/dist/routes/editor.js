@@ -17,7 +17,6 @@ const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
 const bcrypt_1 = __importDefault(require("bcrypt"));
 const multer_1 = __importDefault(require("multer"));
 const aws_sdk_1 = __importDefault(require("aws-sdk"));
-const uuid_1 = require("uuid");
 // Example route handler
 const client_1 = require("@prisma/client");
 const prisma = new client_1.PrismaClient();
@@ -125,12 +124,15 @@ const uploadVideo = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
             }
             const { title, description, editorId } = req.body;
             // Generate a unique key for the file in S3
-            const key = `videos/${(0, uuid_1.v4)()}-${req.file.originalname}`;
+            const fileName = `${req.file.originalname}`;
+            // const encodedFileName = encodeURIComponent(fileName);
+            const key = `${fileName}`;
             // Upload file to AWS S3 bucket
             const params = {
                 Bucket: process.env.AWS_S3_BUCKET_NAME,
                 Key: key,
                 Body: req.file.buffer,
+                ContentType: 'video/mp4', // Set the Content-Type to video/mp4
             };
             yield s3.upload(params).promise();
             // Save the uploaded file details to the database
@@ -145,7 +147,9 @@ const uploadVideo = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
                 },
             });
             console.log(key);
+            // console.log(fileName);
             res.status(201).json({ message: 'Video uploaded successfully', content: uploadedContent });
+            return key;
         }));
     }
     catch (error) {

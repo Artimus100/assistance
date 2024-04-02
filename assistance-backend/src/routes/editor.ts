@@ -123,15 +123,19 @@ const uploadVideo = async (req: Request, res: Response): Promise<void> => {
       const { title, description, editorId } = req.body;
 
       // Generate a unique key for the file in S3
-      const key = `videos/${uuidv4()}-${req.file.originalname}`;
+      const fileName =`${req.file.originalname}`;
+      // const encodedFileName = encodeURIComponent(fileName);
+      const key = `${fileName}`;
 
       // Upload file to AWS S3 bucket
       const params = {
         Bucket: process.env.AWS_S3_BUCKET_NAME!,
         Key: key,
         Body: req.file.buffer,
+        ContentType: 'video/mp4', // Set the Content-Type to video/mp4
+        
       };
-
+     
       await s3.upload(params).promise();
 
       // Save the uploaded file details to the database
@@ -147,7 +151,9 @@ const uploadVideo = async (req: Request, res: Response): Promise<void> => {
       });
 
       console.log(key);
+      // console.log(fileName);
       res.status(201).json({ message: 'Video uploaded successfully', content: uploadedContent });
+      return key;
     });
   } catch (error) {
     console.error('Error uploading video:', error);
