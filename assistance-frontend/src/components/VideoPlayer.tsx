@@ -1,20 +1,36 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import axios from 'axios';
-import PropTypes from 'prop-types';
 
-type VideoProps = {
-  videoKey: string; // The key of the video in the S3 bucket
-}
-// Define prop types for VideoPlayer component
-
-
-
-
-const VideoPlayer: React.FC<VideoProps> = ({ videoKey }) => {
+const VideoPlayer: React.FC = () => {
   const videoRef = useRef<HTMLVideoElement>(null);
+  const [videoKey, setVideoKey] = useState<string | null>(null);
+
+  useEffect(() => {
+    const fetchVideoKey = async () => {
+      try {
+        // Make a request to your backend to fetch the video key
+        const response = await axios.get('/getVideoKey'); // Adjust the endpoint URL as needed
+        const key = response.data.key;
+        setVideoKey(key);
+      } catch (error) {
+        console.error('Error fetching video key:', error);
+      }
+    };
+
+    fetchVideoKey();
+
+    // Clean up when component unmounts
+    return () => {
+      if (videoRef.current) {
+        videoRef.current.src = ''; // Clear the src attribute
+      }
+    };
+  }, []);
 
   useEffect(() => {
     const fetchVideo = async () => {
+      if (!videoKey) return;
+
       try {
         // Make a request to your backend to fetch the video stream
         const response = await axios.get(`/streamVideo/${videoKey}`, {
@@ -32,17 +48,8 @@ const VideoPlayer: React.FC<VideoProps> = ({ videoKey }) => {
         console.error('Error fetching video:', error);
       }
     };
-    VideoPlayer.propTypes = {
-      videoKey: PropTypes.string.isRequired,
-    };
-    fetchVideo();
 
-    // Clean up when component unmounts
-    return () => {
-      if (videoRef.current) {
-        videoRef.current.src = ''; // Clear the src attribute
-      }
-    };
+    fetchVideo();
   }, [videoKey]);
 
   return (
