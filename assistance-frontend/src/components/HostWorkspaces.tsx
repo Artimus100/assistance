@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import { useParams } from 'react-router-dom';
+import { useParams, Link } from 'react-router-dom'; // Import useParams and Link from react-router-dom
 
 interface Workspace {
     id: number;
@@ -45,7 +45,13 @@ const Dashboard: React.FC = () => {
                     <h2>Workspaces created by {username}</h2>
                     <ul>
                         {workspaces.map(workspace => (
-                            <li key={workspace.id}>{workspace.name}</li>
+                            <li key={workspace.id}>
+                                {workspace.name}{' '}
+                                {/* Button to redirect to videos of a specific workspace */}
+                                <Link to={`/workspace/${workspace.id}/videos`}>
+                                    <button>View Videos</button>
+                                </Link>
+                            </li>
                         ))}
                     </ul>
                 </div>

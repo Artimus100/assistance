@@ -412,6 +412,24 @@ const streamVideo = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
 });
 exports.streamVideo = streamVideo;
 const hostEnterWorkspace = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        const workspaceId = parseInt(req.params.workspaceId);
+        if (isNaN(workspaceId)) {
+            res.status(400).json({ error: 'Invalid workspaceId' });
+            return;
+        }
+        // Fetch videos uploaded in the specified workspace from the database
+        const videos = yield prisma.content.findMany({
+            where: {
+                workspaceId: workspaceId
+            }
+        });
+        res.status(200).json({ videos });
+    }
+    catch (error) {
+        console.error('Error fetching videos:', error);
+        res.status(500).json({ error: 'Failed to fetch videos' });
+    }
 });
 exports.hostEnterWorkspace = hostEnterWorkspace;
 function getAllVideoKeys() {

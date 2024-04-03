@@ -13,6 +13,7 @@ import EditorWorkspace from "./components/EditorWorkspace"
 import WorkspaceForm from "./components/WorkspaceForm";
 import VideoPlayer from "./components/VideoPlayer";
 import Dashboard from "./components/HostWorkspaces"
+import WorkspaceVideos from "./components/WorkspaceVideos";
 // import UploadVideoToYouTube from "./components/UploadVideoToYoutube"
 const App: React.FC = () => {
   return (
@@ -32,6 +33,8 @@ const App: React.FC = () => {
         <Route path="/editorWorkspace" element={<EditorWorkspace/>}/>
         <Route path="/streamVideo/:videoKey" element={<VideoPlayer/>}/>
         <Route path="/hostWorkspace/:username" element={<Dashboard/> }/>
+        <Route path="/workspace/:workspaceId/videos" element={<WorkspaceVideos/>} />
+
       </Routes>
       
       {/* <div>

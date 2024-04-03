@@ -460,8 +460,27 @@ const streamVideo = async (req: Request, res: Response): Promise<void> => {
     res.status(500).json({ error: 'Failed to stream video' });
   }
 };
-const hostEnterWorkspace = async (req: Request, res: Response): Promise<void> => {
+const hostEnterWorkspace = async (req:Request, res:Response) => {
+  try {
+    const workspaceId = parseInt(req.params.workspaceId);
+    if (isNaN(workspaceId)) {
+        res.status(400).json({ error: 'Invalid workspaceId' });
+        return;
+    }
+
+    // Fetch videos uploaded in the specified workspace from the database
+    const videos = await prisma.content.findMany({
+        where: {
+            workspaceId: workspaceId
+        }
+    });
+
+    res.status(200).json({ videos });
+} catch (error) {
+    console.error('Error fetching videos:', error);
+    res.status(500).json({ error: 'Failed to fetch videos' });
 }
+};
 async function getAllVideoKeys(): Promise<{ id: number; videoFile: string ; status: string; title:string; description:string}[]> {
   const contents = await prisma.content.findMany();
   return contents.map(content =>({id:content.id,videoFile:content.videoFile, status:content.status, title:content.title, description:content.description}) );

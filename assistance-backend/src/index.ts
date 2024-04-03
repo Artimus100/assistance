@@ -105,7 +105,7 @@ app.get('/editor/workspace/:workspaceId', checkWorkspace);
 app.get('/hosts', getAllHosts);
 app.post('/hosts/register', registerHost);
 app.get('/hosts/workspaces/:hostUsername', getAllWorkspaces);
-app.get("hosts/workspaces/:hostUsername/:workspaceId", hostEnterWorkspace);
+app.get('/workspaces/:workspaceId/videos', hostEnterWorkspace);
 app.get('/hosts/Dashboard', authenticateToken,  (req: Request, res: Response) => {
   try {
     // Access the authenticated user role from req.userRole
