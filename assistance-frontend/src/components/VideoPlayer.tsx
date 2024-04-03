@@ -9,8 +9,8 @@ const VideoPlayer: React.FC = () => {
     const fetchVideoKey = async () => {
       try {
         // Make a request to your backend to fetch the video key
-        const response = await axios.get('/getVideoKey'); // Adjust the endpoint URL as needed
-        const key = response.data.key;
+        const response = await axios.get('/getAllvideoKeys'); // Adjust the endpoint URL as needed
+        const key = response.data.videoFile;
         setVideoKey(key);
       } catch (error) {
         console.error('Error fetching video key:', error);

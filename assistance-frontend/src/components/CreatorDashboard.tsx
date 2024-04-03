@@ -2,20 +2,22 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 
 enum VideoStatus {
-  PENDING = 'pending',
-  APPROVED = 'approved',
-  REJECTED = 'rejected',
+  PENDING = 'PENDING',
+  APPROVED = 'APPROVED',
+  REJECTED = 'REJECTED',
 }
 
-interface Video {
+type Video= {
   id: number;
   title: string;
   description: string;
   status: VideoStatus;
+  videoFile: string;
 }
 
 const CreatorDashboard: React.FC = () => {
   const [pendingVideos, setPendingVideos] = useState<Video[]>([]);
+  // const [error, setError] = useState<string>('');
 
   useEffect(() => {
     fetchPendingVideos();
@@ -23,15 +25,17 @@ const CreatorDashboard: React.FC = () => {
 
   const fetchPendingVideos = async () => {
     try {
-      const response = await axios.get<{ videos: Video[] }>('/awaiting-approval');
-      console.log('Response data:', response.data);
-      setPendingVideos(response.data.videos);
+      const response = await axios.get<{ videoKeys?: Video[] }>('/getAllVideoKeys'); // Fetch all videos from the backend
+      if (response.data.videoKeys) {
+        const pendingVideos = response.data.videoKeys.filter(video => video.status === VideoStatus.PENDING); // Filter pending videos
+        setPendingVideos(pendingVideos);
+      } else {
+        console.error('No videoKeys found in the response data.');
+      }
     } catch (error) {
       console.error('Error fetching pending videos:', error);
     }
   };
-
-  console.log('Pending videos:', pendingVideos); // Add this line for debugging
 
   const approveVideo = async (videoId: number) => {
     try {
