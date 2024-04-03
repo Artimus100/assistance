@@ -130,7 +130,7 @@ app.post('/hosts/createKeys', (req, res) => __awaiter(void 0, void 0, void 0, fu
 app.post('/hosts/login', host_3.loginHost);
 // Route to fetch uploaded videos awaiting approval
 // Route to approve a video for publishing
-app.post('/hosts/approve/:id', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+app.post('/hosts/Dashboard/approve/:id', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const { id } = req.params;
     try {
         // Check if the video record exists
@@ -153,7 +153,7 @@ app.post('/hosts/approve/:id', (req, res) => __awaiter(void 0, void 0, void 0, f
     }
 }));
 // Route to reject a video
-app.post('/hosts/reject/:id', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+app.post('/hosts/Dashboard/reject/:id', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const { id } = req.params;
     try {
         // Check if the video record exists

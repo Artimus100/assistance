@@ -6,6 +6,7 @@ import bcrypt from 'bcrypt';
 import { google } from 'googleapis';
 import { S3 } from 'aws-sdk';
 import aws from 'aws-sdk';
+import { stringList } from 'aws-sdk/clients/datapipeline';
 
 
 
@@ -461,9 +462,9 @@ const streamVideo = async (req: Request, res: Response): Promise<void> => {
 };
 const hostEnterWorkspace = async (req: Request, res: Response): Promise<void> => {
 }
-async function getAllVideoKeys(): Promise<{ id: number; videoFile: string }[]> {
+async function getAllVideoKeys(): Promise<{ id: number; videoFile: string ; status: string; title:string; description:string}[]> {
   const contents = await prisma.content.findMany();
-  return contents.map(content =>({id:content.id,videoFile:content.videoFile}) );
+  return contents.map(content =>({id:content.id,videoFile:content.videoFile, status:content.status, title:content.title, description:content.description}) );
 }
 
   

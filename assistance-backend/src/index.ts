@@ -156,7 +156,7 @@ app.post('/hosts/login', loginHost);
 
 // Route to fetch uploaded videos awaiting approval
 // Route to approve a video for publishing
-app.post('/hosts/approve/:id', async (req: Request, res: Response) => {
+app.post('/hosts/Dashboard/approve/:id', async (req: Request, res: Response) => {
     const { id } = req.params;
   
     try {
@@ -183,7 +183,7 @@ app.post('/hosts/approve/:id', async (req: Request, res: Response) => {
   });
   
   // Route to reject a video
-  app.post('/hosts/reject/:id', async (req: Request, res: Response) => {
+  app.post('/hosts/Dashboard/reject/:id', async (req: Request, res: Response) => {
     const { id } = req.params;
   
     try {

@@ -417,7 +417,7 @@ exports.hostEnterWorkspace = hostEnterWorkspace;
 function getAllVideoKeys() {
     return __awaiter(this, void 0, void 0, function* () {
         const contents = yield prisma.content.findMany();
-        return contents.map(content => ({ id: content.id, videoFile: content.videoFile }));
+        return contents.map(content => ({ id: content.id, videoFile: content.videoFile, status: content.status, title: content.title, description: content.description }));
     });
 }
 exports.getAllVideoKeys = getAllVideoKeys;
