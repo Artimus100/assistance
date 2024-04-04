@@ -1,54 +1,66 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
+import VideoComponent from './VideoComponent';
+import { useParams } from 'react-router-dom';
 
-type Video= {
+type Content = {
   id: number;
   title: string;
   description: string;
   videoFile: string;
-}
+};
 
-const WorkspaceVideos: React.FC<{ workspaceId: number }> = ({ workspaceId }) => {
-  const [videos, setVideos] = useState<Video[]>([]);
-  const [loading, setLoading] = useState<boolean>(false);
-  const [error, setError] = useState<string>('');
+const WorkspaceVideos: React.FC = () => {
+  const { workspaceId } = useParams<{ workspaceId: string }>();
+  const parsedWorkspaceId = workspaceId ? parseInt(workspaceId) : undefined;
+  const [contents, setContents] = useState<Content[] | null>(null);
+  const [loading, setLoading] = useState<boolean>(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    fetchVideos();
-  }, [workspaceId]);
+    if (parsedWorkspaceId !== undefined) {
+      fetchVideos(parsedWorkspaceId);
+    }
+  }, [parsedWorkspaceId]);
 
-  const fetchVideos = async () => {
-    setLoading(true);
+  const fetchVideos = async (workspaceId: number) => {
     try {
-      const response = await axios.get(`/workspaces/${workspaceId}/videos`);
-      setVideos(response.data.videos);
-      setLoading(false);
+      const response = await axios.get<{ contents: Content[] }>(`/workspaces/${workspaceId}/videos`);
+      setContents(response.data.contents);
+      setLoading(false); // Set loading to false when videos are fetched
     } catch (error) {
       console.error('Error fetching videos:', error);
-      setError('Failed to fetch videos');
-      setLoading(false);
+      setError('Failed to fetch videos'); // Set error message
+      setLoading(false); // Set loading to false in case of error
     }
   };
 
+  const handleVideoClick = (videoFile: string) => {
+    // You can define your logic to handle streaming the video upon clicking here
+    console.log('Clicked video:', videoFile);
+    // Example: Open the video in a new tab
+    window.open(videoFile, '_blank');
+  };
+
+  if (loading) {
+    return <p>Loading...</p>; // Render loading state
+  }
+
+  if (error) {
+    return <p>Error: {error}</p>; // Render error message if there's an error
+  }
+
+  if (!contents || contents.length === 0) {
+    return <p>No videos found.</p>; // Render message for no videos
+  }
+
+  console.log('Videos:', contents); // Log videos to console
+
   return (
     <div>
-      <h2>Videos in Workspace</h2>
-      {loading && <p>Loading...</p>}
-      {error && <p>{error}</p>}
-      <div>
-        {videos.length > 0 ? (
-          videos.map((video) => (
-            <div key={video.id}>
-              <h3>{video.title}</h3>
-              <p>{video.description}</p>
-              {/* Display the videoFile however you need */}
-              <video src={video.videoFile} controls />
-            </div>
-          ))
-        ) : (
-          <p>No videos available.</p>
-        )}
-      </div>
+      {contents.map((content) => (
+        <VideoComponent key={content.id} content={content} />
+      ))}
     </div>
   );
 };
