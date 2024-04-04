@@ -419,12 +419,15 @@ const hostEnterWorkspace = (req, res) => __awaiter(void 0, void 0, void 0, funct
             return;
         }
         // Fetch videos uploaded in the specified workspace from the database
-        const videos = yield prisma.content.findMany({
+        const contents = yield prisma.content.findMany({
             where: {
                 workspaceId: workspaceId
             }
         });
-        res.status(200).json({ videos });
+        // Modify videoFile paths to include CloudFront URL
+        const modifiedContents = contents.map(content => (Object.assign(Object.assign({}, content), { videoFile: `https://djdg6h6q5o40z.cloudfront.net/${content.videoFile}` })));
+        // Return the modified contents array
+        res.status(200).json({ contents: modifiedContents });
     }
     catch (error) {
         console.error('Error fetching videos:', error);

@@ -460,27 +460,36 @@ const streamVideo = async (req: Request, res: Response): Promise<void> => {
     res.status(500).json({ error: 'Failed to stream video' });
   }
 };
-const hostEnterWorkspace = async (req:Request, res:Response) => {
+const hostEnterWorkspace = async (req: Request, res: Response) => {
   try {
     const workspaceId = parseInt(req.params.workspaceId);
     if (isNaN(workspaceId)) {
-        res.status(400).json({ error: 'Invalid workspaceId' });
-        return;
+      res.status(400).json({ error: 'Invalid workspaceId' });
+      return;
     }
 
     // Fetch videos uploaded in the specified workspace from the database
-    const videos = await prisma.content.findMany({
-        where: {
-            workspaceId: workspaceId
-        }
+    const contents = await prisma.content.findMany({
+      where: {
+        workspaceId: workspaceId
+      }
     });
 
-    res.status(200).json({ videos });
-} catch (error) {
+    // Modify videoFile paths to include CloudFront URL
+    const modifiedContents = contents.map(content => ({
+      ...content,
+      videoFile: `https://djdg6h6q5o40z.cloudfront.net/${content.videoFile}`
+    }));
+
+    // Return the modified contents array
+    res.status(200).json({ contents: modifiedContents });
+  } catch (error) {
     console.error('Error fetching videos:', error);
     res.status(500).json({ error: 'Failed to fetch videos' });
-}
+  }
 };
+
+
 async function getAllVideoKeys(): Promise<{ id: number; videoFile: string ; status: string; title:string; description:string}[]> {
   const contents = await prisma.content.findMany();
   return contents.map(content =>({id:content.id,videoFile:content.videoFile, status:content.status, title:content.title, description:content.description}) );
