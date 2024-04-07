@@ -11,12 +11,13 @@ import CreatorDashboard from "./components/CreatorDashboard";
 import AuthButton from './components/AuthButton';
 import EditorWorkspace from "./components/EditorWorkspace"
 import WorkspaceForm from "./components/WorkspaceForm";
-import VideoPlayer from "./components/VideoPlayer";
 import Dashboard from "./components/HostWorkspaces"
-import WorkspaceVideos from "./components/WorkspaceVideos";
+import VideoList from "./components/VideoList";
 // import UploadVideoToYouTube from "./components/UploadVideoToYoutube"
 const App: React.FC = () => {
+  // const videoUrl = 'https://djdg6h6q5o40z.cloudfront.net/Screen-Recording-2024-01-01-at-7.32.52%C3%A2%C2%80%C2%AFPM-1.mp4';
   return (
+    
     <BrowserRouter>
       <Routes>
         <Route path="/register" element={<RegistrationForm />} />
@@ -31,12 +32,15 @@ const App: React.FC = () => {
         {/*  <Route path="/workspaceUpload" element={<UploadVideoToYouTube/>}/>
          */}
         <Route path="/editorWorkspace" element={<EditorWorkspace/>}/>
-        <Route path="/streamVideo/:videoKey" element={<VideoPlayer/>}/>
         <Route path="/hostWorkspace/:username" element={<Dashboard/> }/>
-        <Route path="/workspace/:workspaceId/videos" element={<WorkspaceVideos/>} />
+        <Route path="/workspace/:workspaceId/videos" element={<VideoList/>} />
 
       </Routes>
-      
+      <div>
+      <h1>Video List</h1>
+      <VideoList />
+    </div>
+       
       {/* <div>
         <h1>Video Upload</h1>
         <UploadForm />
