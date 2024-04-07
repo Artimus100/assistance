@@ -418,10 +418,19 @@ const hostEnterWorkspace = (req, res) => __awaiter(void 0, void 0, void 0, funct
             res.status(400).json({ error: 'Invalid workspaceId' });
             return;
         }
-        // Fetch videos uploaded in the specified workspace from the database
+        // Fetch contents from the database within the specified workspace
         const contents = yield prisma.content.findMany({
             where: {
                 workspaceId: workspaceId
+            },
+            select: {
+                id: true,
+                title: true,
+                description: true,
+                videoFile: true,
+                status: true,
+                uploadDate: true,
+                workspaceId: true
             }
         });
         // Modify videoFile paths to include CloudFront URL

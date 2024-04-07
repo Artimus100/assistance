@@ -468,10 +468,20 @@ const hostEnterWorkspace = async (req: Request, res: Response) => {
       return;
     }
 
-    // Fetch videos uploaded in the specified workspace from the database
+    // Fetch contents from the database within the specified workspace
     const contents = await prisma.content.findMany({
       where: {
         workspaceId: workspaceId
+      },
+      select: {
+        id: true,
+        title: true,
+        description: true,
+        videoFile: true,
+        status:true,
+        uploadDate:true,
+        workspaceId:true
+
       }
     });
 
@@ -488,7 +498,6 @@ const hostEnterWorkspace = async (req: Request, res: Response) => {
     res.status(500).json({ error: 'Failed to fetch videos' });
   }
 };
-
 
 async function getAllVideoKeys(): Promise<{ id: number; videoFile: string ; status: string; title:string; description:string}[]> {
   const contents = await prisma.content.findMany();
