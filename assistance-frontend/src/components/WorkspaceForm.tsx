@@ -51,7 +51,7 @@ const WorkspaceForm: React.FC = () => {
         />
         <input
           type="text"
-          placeholder="Name"
+          placeholder="Workspace Name"
           value={name}
           onChange={(e) => setName(e.target.value)}
         />

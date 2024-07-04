@@ -25,7 +25,7 @@ const CreatorDashboard: React.FC = () => {
 
   const fetchPendingVideos = async () => {
     try {
-      const response = await axios.get<{ videoKeys?: Video[] }>('/getAllVideoKeys'); // Fetch all videos from the backend
+      const response = await axios.get<{ videoKeys?: Video[] }>('http://localhost:3000/getAllVideoKeys'); // Fetch all videos from the backend
       if (response.data.videoKeys) {
         const pendingVideos = response.data.videoKeys.filter(video => video.status === VideoStatus.PENDING); // Filter pending videos
         setPendingVideos(pendingVideos);
@@ -39,7 +39,7 @@ const CreatorDashboard: React.FC = () => {
 
   const approveVideo = async (videoId: number) => {
     try {
-      await axios.post(`/approve/${videoId}`);
+      await axios.post(`/hosts/Dashboard/approve/${videoId}`);
       // Refresh pending videos after approval
       fetchPendingVideos();
     } catch (error) {
@@ -49,7 +49,7 @@ const CreatorDashboard: React.FC = () => {
 
   const rejectVideo = async (videoId: number) => {
     try {
-      await axios.post(`/reject/${videoId}`);
+      await axios.post(`/hosts/Dashboard/reject/${videoId}`);
       // Refresh pending videos after rejection
       fetchPendingVideos();
     } catch (error) {

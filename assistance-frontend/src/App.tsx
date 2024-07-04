@@ -9,7 +9,7 @@ import './App.css'
 import CreatorDashboard from "./components/CreatorDashboard";
 //import UploadForm from './components/UploadForm';
 import AuthButton from './components/AuthButton';
-import EditorWorkspace from "./components/EditorWorkspace"
+import EditorWorkspace from "./components/EditorWorkspace" 
 import WorkspaceForm from "./components/WorkspaceForm";
 import Dashboard from "./components/HostWorkspaces"
 import VideoList from "./components/VideoList";
