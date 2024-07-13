@@ -40,7 +40,7 @@ const App: React.FC = () => {
        
       {/* <div>
         <h1>Video Upload</h1>
-        <UploadForm />
+        <UploadForm />1
         <h1>Authorization</h1>
         <AuthButton />
       </div> */}
